@@ -12,3 +12,6 @@ venv/
 
 # JSON
 progress.json
+
+# Files
+answers/
