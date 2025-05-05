@@ -17,8 +17,11 @@ from progress_tracker import load_progress, save_progress, is_done, mark_done
 from generate_answers import answer_lernziel
 from answer_writer import write_answer, sanitize_filename
 
-# Helper to read stored answer from file
+
 def get_answer_from_file(veranstaltung: str, lernziel: str, output_dir: str = "answers") -> str:
+    """
+    Read the stored answer for a given Lernziel from its Veranstaltung file.
+    """
     filename = sanitize_filename(veranstaltung) + ".txt"
     filepath = os.path.join(output_dir, filename)
     if not os.path.exists(filepath):
@@ -27,13 +30,12 @@ def get_answer_from_file(veranstaltung: str, lernziel: str, output_dir: str = "a
         lines = f.readlines()
     for i, line in enumerate(lines):
         if line.strip() == f"Lernziel: {lernziel}":
-            # find next "Antwort:" line
             for j in range(i+1, len(lines)):
                 if lines[j].startswith("Antwort:"):
                     return lines[j].split("Antwort:", 1)[1].strip()
     return ""
 
-# --- Streamlit UI setup ---
+# Streamlit configuration
 st.set_page_config(page_title="Lernziele Dashboard", layout="wide")
 
 # 1) Load data and state
@@ -50,18 +52,31 @@ client = OpenAI(api_key=api_key)
 
 # 3) Sidebar: Veranstaltung & Lernziel selection
 st.sidebar.title("Navigation")
-veranst_list = df["Veranstaltung: Titel"].unique()
-selected_veranst = st.sidebar.selectbox("Veranstaltung", veranst_list)
+
+# Compute labels for Veranstaltungen, marking those fully answered
+unique_veranst = df["Veranstaltung: Titel"].unique()
+veranst_labels = {}
+for veranst in unique_veranst:
+    lz_list = df[df["Veranstaltung: Titel"] == veranst]["Lernziel"].tolist()
+    done_all = all(is_done(progress, veranst, lz) for lz in lz_list)
+    prefix = "✅ " if done_all else ""
+    veranst_labels[veranst] = f"{prefix}{veranst}"
+
+selected_veranst = st.sidebar.selectbox(
+    "Veranstaltung",
+    options=unique_veranst,
+    format_func=lambda v: veranst_labels[v]
+)
 
 # Filter rows for the selected Veranstaltung
-sub = df[df["Veranstaltung: Titel"] == selected_veranst].reset_index()
+sub = df[df["Veranstaltung: Titel"] == selected_veranst].reset_index(drop=True)
 
-# Build display options with checkmarks
+# Build Lernziel options with checkmarks
 options = []
 for _, row in sub.iterrows():
     lz = row["Lernziel"]
     done = is_done(progress, selected_veranst, lz)
-    prefix = "✅ " if done else "  "
+    prefix = "✅ " if done else ""
     options.append(f"{prefix}{lz}")
 
 selection = st.sidebar.selectbox("Lernziel", options)
@@ -92,8 +107,8 @@ with col1:
 with col2:
     if st.button("Continue answering all"):
         remaining = [
-            (row["Veranstaltung: Titel"], row["Lernziel"]) 
-            for _, row in df.iterrows() 
+            (row["Veranstaltung: Titel"], row["Lernziel"])  
+            for _, row in df.iterrows()  
             if not is_done(progress, row["Veranstaltung: Titel"], row["Lernziel"] )
         ]
         total = len(remaining)
@@ -108,7 +123,7 @@ with col2:
         st.success("All Lernziele answered!")
         st.experimental_rerun()
 
-# LLM call function
+
 def answer_lernziel(client: OpenAI, lernziel: str) -> str:
     prompt = (
         "You are an expert educator. "
