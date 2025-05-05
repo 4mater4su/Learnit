@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+run: streamlit run app.py
+
 Streamlit app: Lernziele Dashboard
 
 Shows Lernziele grouped by Veranstaltung in the sidebar, with answered items marked in green.
