@@ -9,3 +9,6 @@ venv/
 
 # IDEs
 .vscode/
+
+# JSON
+progress.json
