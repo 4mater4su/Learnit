@@ -1,27 +1,25 @@
+#!/usr/bin/env python3
 """
-Script: excel_parser.py
+Module: excel_parser.py
+
+Provides functionality to load the Excel sheet and return a DataFrame
+filtered to the required columns, preserving the original row order.
 """
 import pandas as pd
 
 
-def load_data(file_path: str) -> dict:
+def load_data(file_path: str) -> pd.DataFrame:
     """
-    Load the Excel file, filter to the required columns, group the rows by
-    "Veranstaltung: Titel", and return a dictionary mapping each Veranstaltung
-    title to a list of its record dictionaries.
+    Load the Excel file and filter to the required columns, preserving row order.
 
     Args:
         file_path: Path to the input Excel file.
 
     Returns:
-        A dict where keys are Veranstaltung titles and values are lists of
-        dicts, each containing the columns:
-        Modul, akad. Periode, Woche, LZ-Dimension, LZ-Kognitionsdimension, Lernziel.
+        A pandas DataFrame with the columns:
+        Modul, akad. Periode, Woche, Veranstaltung: Titel,
+        LZ-Dimension, LZ-Kognitionsdimension, Lernziel
     """
-    # Read the Excel file
-    df = pd.read_excel(file_path)
-
-    # Keep only the needed columns
     cols = [
         "Modul",
         "akad. Periode",
@@ -31,12 +29,6 @@ def load_data(file_path: str) -> dict:
         "LZ-Kognitionsdimension",
         "Lernziel"
     ]
-    df = df[cols]
-
-    # Group by Veranstaltung title and convert sub-DataFrames to list of records
-    grouped = {
-        veranst: group.to_dict(orient="records")
-        for veranst, group in df.groupby("Veranstaltung: Titel")
-    }
-
-    return grouped
+    # Read only the needed columns, preserving their order
+    df = pd.read_excel(file_path, usecols=cols)
+    return df
