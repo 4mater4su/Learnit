@@ -1,0 +1,53 @@
+{
+  "Beschreibe die Schritte der endogenen Calcitriolsynthese.": {
+    "Was ist die aktive Form von Vitamin D3, die in der Calcitriolsynthese gebildet wird?": {
+      "answer": "1,25-Dihydroxycholecalciferol, auch Calcitriol genannt.",
+      "repetitions": 2,
+      "ratings": [
+        3,
+        1
+      ],
+      "avg_rating": 2.0
+    },
+    "Wo findet die Hydroxylierung von Cholecalciferol statt, die zur Bildung von Calcidiol führt?": {
+      "answer": "In der Leber.",
+      "repetitions": 2,
+      "ratings": [
+        2,
+        1
+      ],
+      "avg_rating": 1.5
+    },
+    "Welche Substanz wird in der Niere hydroxiliert, um das aktive Vitamin D3 zu bilden?": {
+      "answer": "25-Hydroxyvitamin D3 (Calcidiol).",
+      "repetitions": 2,
+      "ratings": [
+        3,
+        1
+      ],
+      "avg_rating": 2.0
+    },
+    "Wie wird die Hydroxylase in der Niere reguliert?": {
+      "answer": "Über den PTH-Rezeptor, einen Calciumsensor, cAMP, intrazelluläres Ca2+ und HPO4 2-.",
+      "repetitions": 2,
+      "ratings": [
+        3,
+        1
+      ],
+      "avg_rating": 2.0
+    },
+    "Welche Rolle spielt der Megalinrezeptor bei der Calcitriolsynthese?": {
+      "answer": "Er ist an der luminalen Internalisierung von Calcidiol beteiligt.",
+      "repetitions": 2,
+      "ratings": [
+        2,
+        1
+      ],
+      "avg_rating": 1.5
+    },
+    "_sessions": [
+      "2025-06-06T19:17:37",
+      "2025-06-06T19:18:16"
+    ]
+  }
+}
