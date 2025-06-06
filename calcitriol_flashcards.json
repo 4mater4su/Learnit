@@ -1,0 +1,22 @@
+{
+  "learning_goal": "Beschreibe die Schritte der endogenen Calcitriolsynthese.",
+  "page_range": "13-13",
+  "flashcards": [
+    {
+      "question": "Was sind die ersten Schritte der endogenen Calcitriolsynthese?",
+      "answer": "UV-katalysierte Ringspaltung in der Haut, wobei 7-Dehydrocholesterin in Cholecalciferol (Vitamin D3) umgewandelt wird."
+    },
+    {
+      "question": "Welche Hydroxylierungsschritte durchläuft Vitamin D3 in der Synthese?",
+      "answer": "Zuerst in der Leber zu 25-Hydroxyvitamin D3 (Calcidiol), dann in der Niere zu 1,25-Dihydroxyvitamin D3 (Calcitriol), dem aktiven Vitamin D3."
+    },
+    {
+      "question": "Wie wird die Hydroxylase in der Niere reguliert?",
+      "answer": "Sie wird über den PTH-Rezeptor und einen Calciumsensor mittels cAMP reguliert, und intrazelluläres Ca2+ sowie HPO4^2- hemmen die Hydroxylase."
+    },
+    {
+      "question": "Was ist die Funktion des Megalinrezeptors im Zusammenhang mit Calcitriol?",
+      "answer": "Der Megalinrezeptor ist an der luminalen Internalisierung von Calcidiol beteiligt."
+    }
+  ]
+}

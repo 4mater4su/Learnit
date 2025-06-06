@@ -12,8 +12,8 @@ from openai import OpenAI
 import pandas as pd
 
 from excel_parser import load_data
-from answer_writer import write_answer
-from progress_tracker import load_progress, save_progress, is_done, mark_done
+from old.answer_writer import write_answer
+from old.progress_tracker import load_progress, save_progress, is_done, mark_done
 
 
 def answer_lernziel(client: OpenAI, lernziel: str) -> str:
