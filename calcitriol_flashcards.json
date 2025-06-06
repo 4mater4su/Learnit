@@ -3,20 +3,24 @@
   "page_range": "13-13",
   "flashcards": [
     {
-      "question": "Was sind die ersten Schritte der endogenen Calcitriolsynthese?",
-      "answer": "UV-katalysierte Ringspaltung in der Haut, wobei 7-Dehydrocholesterin in Cholecalciferol (Vitamin D3) umgewandelt wird."
+      "question": "Was ist die aktive Form von Vitamin D3, die in der Calcitriolsynthese gebildet wird?",
+      "answer": "1,25-Dihydroxycholecalciferol, auch Calcitriol genannt."
     },
     {
-      "question": "Welche Hydroxylierungsschritte durchläuft Vitamin D3 in der Synthese?",
-      "answer": "Zuerst in der Leber zu 25-Hydroxyvitamin D3 (Calcidiol), dann in der Niere zu 1,25-Dihydroxyvitamin D3 (Calcitriol), dem aktiven Vitamin D3."
+      "question": "Wo findet die Hydroxylierung von Cholecalciferol statt, die zur Bildung von Calcidiol führt?",
+      "answer": "In der Leber."
+    },
+    {
+      "question": "Welche Substanz wird in der Niere hydroxiliert, um das aktive Vitamin D3 zu bilden?",
+      "answer": "25-Hydroxyvitamin D3 (Calcidiol)."
     },
     {
       "question": "Wie wird die Hydroxylase in der Niere reguliert?",
-      "answer": "Sie wird über den PTH-Rezeptor und einen Calciumsensor mittels cAMP reguliert, und intrazelluläres Ca2+ sowie HPO4^2- hemmen die Hydroxylase."
+      "answer": "Über den PTH-Rezeptor, einen Calciumsensor, cAMP, intrazelluläres Ca2+ und HPO4 2-."
     },
     {
-      "question": "Was ist die Funktion des Megalinrezeptors im Zusammenhang mit Calcitriol?",
-      "answer": "Der Megalinrezeptor ist an der luminalen Internalisierung von Calcidiol beteiligt."
+      "question": "Welche Rolle spielt der Megalinrezeptor bei der Calcitriolsynthese?",
+      "answer": "Er ist an der luminalen Internalisierung von Calcidiol beteiligt."
     }
   ]
 }
