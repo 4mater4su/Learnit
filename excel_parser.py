@@ -31,4 +31,5 @@ def load_data(file_path: str) -> pd.DataFrame:
     ]
     # Read only the needed columns, preserving their order
     df = pd.read_excel(file_path, usecols=cols)
+
     return df
