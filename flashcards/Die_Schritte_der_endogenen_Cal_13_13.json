@@ -1,0 +1,27 @@
+{
+  "learning_goal": "Die Schritte der endogenen Calcitriolsynthese (1,25(OH)2 Cholecalciferol), deren Lokalisation (Gewebe) und deren Regulation beschreiben können",
+  "page_range": "13-13",
+  "pdf_path": "PDFs/M10_komplett.pdf",
+  "flashcards": [
+    {
+      "question": "Was ist die aktive Form des Vitamin D3, die durch die Endogene Calcitriolsynthese gebildet wird?",
+      "answer": "1,25-Dihydroxycholecalciferol (Calcitriol)."
+    },
+    {
+      "question": "Wo findet die Hydroxylierung von Cholecalciferol statt, und welche Produkte entstehen dabei?",
+      "answer": "In Leber, dabei entsteht 25-Hydroxyvitamin D3 (Calcidiol)."
+    },
+    {
+      "question": "Welche Faktoren regulieren die Hydroxylase in der Niere?",
+      "answer": "Der PTH-Rezeptor, ein Calciumsensor, und intrazelluläres Ca2+ sowie HPO42- hemmen die Hydroxylase."
+    },
+    {
+      "question": "Was ist die Funktion des Megalinrezeptors in Bezug auf Calcidiol?",
+      "answer": "Der Megalinrezeptor ist an der Luminalen Internalisierung von Calcidiol beteiligt."
+    },
+    {
+      "question": "Welchen Einfluss haben intrazelluläres Ca2+ und HPO42- auf die Hydroxylase in der Niere?",
+      "answer": "Sie hemmen die Hydroxylase."
+    }
+  ]
+}

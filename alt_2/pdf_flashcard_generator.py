@@ -44,9 +44,10 @@ def generate_flashcards_from_pdf(
         uploaded_file = client.files.create(file=f, purpose="user_data")
 
     prompt = (
-        f"Das folgende PDF enthält Informationen zum Lernziel:\n"
-        f"„{learning_goal}“.\n"
-        f"Bitte extrahiere daraus 3 bis 5 Fragen mit den passenden Antworten.\n"
+        #f"Das folgende PDF enthält Informationen zum Lernziel:\n"
+        #f"„{learning_goal}“.\n"
+        #f"Bitte extrahiere daraus 3 bis 5 Fragen mit den passenden Antworten.\n"
+        f"Bitte erstelle 3-5 Fragen und Antworten basierend auf dem Inhalt.\n"
         f"Gib sie im folgenden JSON-Format zurück:\n\n"
         f"{{\n"
         f"  \"flashcards\": [\n"
@@ -120,8 +121,8 @@ if __name__ == "__main__":
     flashcards = generate_flashcards_from_pdf(
         pdf_path="PDFs/M10_komplett.pdf",
         page_range=(13, 13),
-        learning_goal="Beschreibe die Schritte der endogenen Calcitriolsynthese.",
-        output_json_path="calcitriol_flashcards.json"
+        learning_goal="Die Schritte der endogenen Calcitriolsynthese (1,25(OH)2 Cholecalciferol), deren Lokalisation (Gewebe) und deren Regulation beschreiben können",
+        output_json_path="flashcards/calcitriol_flashcards.json"
     )
 
     for card in flashcards:
