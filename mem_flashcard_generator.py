@@ -268,11 +268,15 @@ Das folgende PDF enthält Informationen zum Lernziel:
 
 Hier sind Fragen & Antworten, die der Lernende bereits bearbeitet hat
 (DU DARFST KEINE davon inhaltlich oder wörtlich wiederholen!):
-
+    
 {already_covered}
 
 Bitte extrahiere {min_cards}–{max_cards} NEUE Fragen,
 • die Aspekte behandeln, die oben noch nicht vorkommen,
+• oder Fragen, die zuvor als schwierig eingestuft wurden
+  (Durchschnittsbewertung ≥ 2),  
+  wobei diese dann inhaltlich übereinstimmen dürfen,  
+  aber mit einer klar anderen Formulierung und aus neuem Blickwinkel,
 • deren Formulierungen sich klar von allen bisherigen unterscheiden
   (andere Satzstruktur, Synonyme, neue Blickwinkel),
 • die dennoch korrekt und prägnant sind.
@@ -281,7 +285,7 @@ Gib sie exakt in diesem JSON-Format zurück:
 
 {{
   "flashcards": [
-    {{"question": "...", "answer": "..."}},
+    {{ "question": "...", "answer": "..." }},
     …
   ]
 }}
@@ -372,7 +376,7 @@ if __name__ == "__main__":
     Test sequence using:
       - pdf_path = "PDFs/M10_komplett.pdf"
       - page_range = (13, 13)
-      - learning_goal = "Beschreibe die Schritte der endogenen Calcitriolsynthese."
+      - learning_goal = "Die Schritte der endogenen Calcitriolsynthese (1,25(OH)2 Cholecalciferol), deren Lokalisation (Gewebe) und deren Regulation beschreiben können"
     """
 
     import sys
@@ -380,26 +384,26 @@ if __name__ == "__main__":
     # 1) Define inputs
     pdf_path = "PDFs/M10_komplett.pdf"
     page_range = (13, 13)
-    learning_goal = "Beschreibe die Schritte der endogenen Calcitriolsynthese."
+    learning_goal = "Die Schritte der endogenen Calcitriolsynthese (1,25(OH)2 Cholecalciferol), deren Lokalisation (Gewebe) und deren Regulation beschreiben können"
 
     # 2) Paths for output JSON files
-    initial_output = "calcitriol_flashcards.json"
-    additional_output = "calcitriol_additional_flashcards.json"
+    initial_output = "flashcards/calcitriol_flashcards.json"
+    additional_output = "flashcards/calcitriol_additional_flashcards.json"
 
-    print("\n=== SCHRITT 1: Initiale Flashcard-Generierung ===")
-    try:
-        initial_cards = generate_flashcards_from_pdf(
-            pdf_path=pdf_path,
-            page_range=page_range,
-            learning_goal=learning_goal,
-            output_json_path=initial_output
-        )
-        print(f"Es wurden {len(initial_cards)} initiale Karten erzeugt. Fragen:")
-        for i, c in enumerate(initial_cards, 1):
-            print(f"  {i}. {c['question']}")
-    except Exception as e:
-        print(f"Fehler bei der initialen Generierung: {e}")
-        sys.exit(1)
+    # print("\n=== SCHRITT 1: Initiale Flashcard-Generierung ===")
+    # try:
+    #     initial_cards = generate_flashcards_from_pdf(
+    #         pdf_path=pdf_path,
+    #         page_range=page_range,
+    #         learning_goal=learning_goal,
+    #         output_json_path=initial_output
+    #     )
+    #     print(f"Es wurden {len(initial_cards)} initiale Karten erzeugt. Fragen:")
+    #     for i, c in enumerate(initial_cards, 1):
+    #         print(f"  {i}. {c['question']}")
+    # except Exception as e:
+    #     print(f"Fehler bei der initialen Generierung: {e}")
+    #     sys.exit(1)
 
     print("\n=== SCHRITT 2: Zusätzliche Flashcard-Generierung ===")
     try:

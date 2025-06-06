@@ -134,7 +134,7 @@ def print_goal_progress(learning_goal: str, path: str = PROGRESS_PATH) -> None:
 
 def main() -> None:
     """Entry‑point when run as a script."""
-    json_path = "calcitriol_flashcards.json"
+    json_path = "flashcards/calcitriol_flashcards.json"
     if len(sys.argv) > 1:
         json_path = sys.argv[1]
 

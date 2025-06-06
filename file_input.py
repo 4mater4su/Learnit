@@ -55,7 +55,7 @@ if __name__ == "__main__":
         pdf_path="PDFs/M10_komplett.pdf",
         start_page=13,
         end_page=13,
-        question="Write a haiku based on the info."
+        question="Generiere Fragen und Antworten"
     )
 
     print(answer)

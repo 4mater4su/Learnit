@@ -36,6 +36,6 @@ def load_data(file_path: str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    file_path = "/Users/robing/Desktop/projects/Learnit/M10-LZ.xlsx"
+    file_path = "/Users/robing/Desktop/projects/Learnit/lernziele/M10-LZ.xlsx"
     df = load_data(file_path)
     print(df)

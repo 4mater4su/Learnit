@@ -1,0 +1,27 @@
+{
+  "learning_goal": "Die Schritte der endogenen Calcitriolsynthese (1,25(OH)2 Cholecalciferol), deren Lokalisation (Gewebe) und deren Regulation beschreiben können",
+  "page_range": "13-13",
+  "generated_at": "2025-06-06T21:53:44",
+  "flashcards": [
+    {
+      "question": "Welche Bedeutung hat die Hydroxylierung von Vitamin D im Zusammenhang mit der Calciumregulation im Körper?",
+      "answer": "Die Hydroxylierung wandelt Vitamin D in seine aktive Form um, die die Calciumaufnahme im Darm fördert und somit den Calciumstoffwechsel reguliert."
+    },
+    {
+      "question": "In welchem Gewebe findet die erste hydroxylierende Reaktion bei der endogenen Synthese von Calcitriol statt, und warum ist dieser Schritt entscheidend?",
+      "answer": "Die erste Hydroxylierung erfolgt in der Leber, wo Calcidiol entsteht; dieser Schritt ist entscheidend, weil es die Speicherform des Vitamins ist, die im Blut nachweisbar ist."
+    },
+    {
+      "question": "Wie beeinflusst der Calciumspiegel im Blut die Aktivität der Hydroxylase in der Niere?",
+      "answer": "Niedrige Calciumspiegel im Blut vermindern die Hemmung der Hydroxylase, während hohe Calciumwerte die Aktivität durch intrazelluläre Ca2+-abhängige Hemmung reduzieren."
+    },
+    {
+      "question": "Welche Rolle spielen PTH und Calcium-Sensoren bei der Steuerung der Bildung von aktivem Vitamin D in der Niere?",
+      "answer": "PTH aktiviert die Hydroxylase durch Rezeptorbindung, während Calcium-Sensoren die Enzymaktivität modulieren, um den Vitamin-D-Spiegel entsprechend den Calciumbedürfnissen anzupassen."
+    },
+    {
+      "question": "Warum ist die Nachweismöglichkeit von Calcidiol im Blut essenziell für die Beurteilung des Vitamin-D-Status im Körper?",
+      "answer": "Calcidiol ist die Speicher- und Transportform des Vitamins im Blut, deren Quantifizierung zeigt den langfristigen Vitamin-D-Status an, im Vergleich zur kurzfristig gebildeten aktiven Form."
+    }
+  ]
+}
