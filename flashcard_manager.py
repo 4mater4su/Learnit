@@ -9,13 +9,13 @@ A single script to:
 
 Usage:
   python flashcard_manager.py add    --pdf "PDFs/M10_komplett.pdf" \
-                                     --pages 13 13 \
-                                     --goal "Die Schritte der endogenen Calcitriolsynthese ..." \
+                                     --pages 25 25 \
+                                     --goal "Das gestörte Gangmuster bei einer Coxa valga und Coxa vara beschreiben können." \
                                      --outdir flashcards
 
   python flashcard_manager.py list   --outdir flashcards
 
-  python flashcard_manager.py review --json flashcards/calcitriol_flashcards.json
+  python flashcard_manager.py review --json flashcards/coxa_valga_vara_flashcards.json
 """
 
 import argparse
