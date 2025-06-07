@@ -76,7 +76,7 @@ def generate_flashcards_from_pdf(
         uploaded = CLIENT.files.create(file=f, purpose="user_data")
 
     prompt = (
-        f"Bitte erstelle 3–5 Fragen und Antworten basierend auf dem Inhalt."
+        f"Bitte erstelle 3–5 Fragen und Antworten in Verbindung mit dem Lernziel: {learning_goal}"
         f"Gib sie im JSON-Format zurück:\n\n"
         f"{{\n"
         f"  \"flashcards\": [\n"
