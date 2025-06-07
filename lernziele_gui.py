@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-Module: lernziele_gui.py
-
-Ein Tkinter-GUI, das deine Excel-Daten lädt und alle Lernziele
-in einer scrollbaren Listbox anzeigt. Lernziele mit existierenden
-Flashcards werden farblich hervorgehoben. Nach Auswahl kannst du
-kopieren, Flashcards generieren oder über einen Button reviewen.
-"""
-
 import os
 import json
 import tkinter as tk
@@ -22,6 +13,35 @@ from flashcard_manager import (
     update_progress
 )
 
+def create_dark_button(parent, text, command, width=400, height=60, font=('SF Pro Display', 20, 'bold'), bg='#232526', fg='white', hover_bg='#34373a', key=None):
+    canvas = tk.Canvas(parent, height=height, width=width, bg=bg, highlightthickness=0, bd=0)
+    rect = canvas.create_rectangle(0, 0, width, height, fill=bg, outline=bg, width=0)
+    label = canvas.create_text(width//2, height//2, text=text, fill=fg, font=font)
+
+    def on_enter(event=None):
+        canvas.itemconfig(rect, fill=hover_bg)
+    def on_leave(event=None):
+        canvas.itemconfig(rect, fill=bg)
+    def on_click(event=None):
+        command()
+    canvas.bind("<Enter>", on_enter)
+    canvas.bind("<Leave>", on_leave)
+    canvas.bind("<Button-1>", on_click)
+    canvas.configure(cursor='hand2')
+
+    # Keyboard support: space/return or optional custom key
+    def on_key(event):
+        if key:
+            # this is a rating button → only react to its specific key ('1','2' or '3')
+            if event.char == key:
+                command()
+        else:
+            # this is the action button → only react to Enter/Space
+            if event.keysym in ('Return', 'space'):
+                command()
+    canvas.bind("<Key>", on_key)
+
+    return canvas
 
 class LernzieleViewer(tk.Tk):
     def __init__(self):
@@ -75,7 +95,6 @@ class LernzieleViewer(tk.Tk):
         tk.Button(gen,text="…",command=self.browse_outdir).grid(row=2,column=2)
         self.gen_btn = tk.Button(gen, text="Generate Flashcards", command=self.generate_flashcards, state="disabled")
         self.gen_btn.grid(row=3,column=0,columnspan=3,pady=10)
-        # Review button in same frame
         self.review_btn = tk.Button(gen, text="Review Flashcards", command=self.review_current, state="disabled")
         self.review_btn.grid(row=4,column=0,columnspan=3,pady=(0,10))
         gen.columnconfigure(1, weight=1)
@@ -106,7 +125,6 @@ class LernzieleViewer(tk.Tk):
         idx=sel[0]; text=self.lernziele[idx]; self.current_text=text
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.insert("end",text); self.details_text.config(state="disabled")
         self.copy_btn.config(state="normal"); self.gen_btn.config(state="normal")
-        # enable review if exists
         if self.find_json_for_goal(text):
             self.review_btn.config(state="normal")
         else:
@@ -135,7 +153,6 @@ class LernzieleViewer(tk.Tk):
     def browse_outdir(self):
         d=filedialog.askdirectory(title="Outdir auswählen")
         if d: self.outdir_entry.delete(0,'end'); self.outdir_entry.insert(0,d)
-        # recolor list
         for i,txt in enumerate(self.lernziele):
             color = "#316417" if self.find_json_for_goal(txt) else "white"
             self.listbox.itemconfig(i,bg=color)
@@ -163,46 +180,132 @@ class LernzieleViewer(tk.Tk):
             return
         self.start_review(path)
 
-    def start_review(self,json_path):
-        data=load_flashcard_data(json_path); self.flashcards=data['flashcards']
-        self.session_results=[]; self.review_index=0; self.review_data=data; self.review_stage='question'
-        self.rev_win=tk.Toplevel(self); self.rev_win.title('Review'); self.rev_win.geometry('1000x600')
-        self.rev_win.bind('<Return>',self.on_action); self.rev_win.bind('<space>',self.on_action)
-        self.rev_win.bind('1',lambda e: self.rate_and_next(1)); self.rev_win.bind('2',lambda e: self.rate_and_next(2)); self.rev_win.bind('3',lambda e: self.rate_and_next(3))
-        tk.Label(self.rev_win,text='Frage:',font=('Arial',14,'bold')).pack(anchor='w',padx=10,pady=(10,0))
-        self.q_label=tk.Label(self.rev_win,text='',wraplength=950,justify='left',font=('Arial',12)); self.q_label.pack(fill='x',padx=10)
-        self.a_label=tk.Label(self.rev_win,text='',wraplength=950,justify='left',font=('Arial',12),fg='blue'); self.a_label.pack(fill='x',padx=10,pady=(5,0))
-        self.action_btn=tk.Button(self.rev_win,text='Antwort anzeigen',font=('Arial',12),command=self.on_action); self.action_btn.pack(pady=20)
-        self.rating_frame=tk.Frame(self.rev_win)
-        self.rating_var=tk.IntVar(value=2)
-        for val,txt in [(1,'Einfach'),(2,'Mittel'),(3,'Schwer')]: tk.Radiobutton(self.rating_frame,text=txt,variable=self.rating_var,value=val,font=('Arial',12),state='disabled').pack(side='left',padx=20)
+    def start_review(self, json_path):
+        data = load_flashcard_data(json_path)
+        self.flashcards = data['flashcards']
+        self.session_results = []
+        self.review_index = 0
+        self.review_data = data
+        self.review_stage = 'question'
+
+        self.rev_win = tk.Toplevel(self)
+        self.rev_win.title('Flashcard Review')
+        self.rev_win.geometry('1000x700')
+        self.rev_win.configure(bg='#181A1B')
+        self.rev_win.resizable(True, True)
+        self.rev_win.focus_set()
+
+        card_frame = tk.Frame(self.rev_win, bg='#232526', highlightbackground='#373B3E', highlightthickness=2)
+        card_frame.pack(expand=True, fill='both', padx=40, pady=40)
+
+        self.q_label = tk.Label(
+            card_frame,
+            text='',
+            font=('SF Pro Display', 26, 'bold'),
+            bg='#232526',
+            fg='white',
+            wraplength=900,
+            justify='center',
+            pady=36
+        )
+        self.q_label.pack(fill='x', pady=(30, 8))
+
+        self.a_label = tk.Label(
+            card_frame,
+            text='',
+            font=('SF Pro Display', 22),
+            bg='#232526',
+            fg='#7AB8F5',
+            wraplength=900,
+            justify='center',
+            pady=20
+        )
+        self.a_label.pack(fill='x', pady=(8, 20))
+
+        # --- Custom Action Button (dark, never bright) ---
+        self.action_btn = create_dark_button(
+            card_frame,
+            "Antwort anzeigen",
+            self.on_action,
+            width=400, height=60,
+            font=('SF Pro Display', 20, 'bold'),
+            bg="#333637",
+            fg='white',
+            hover_bg="#42464a"
+        )
+        self.action_btn.pack(pady=(8, 16))
+
+        # --- Custom Rating Buttons ---
+        self.rating_frame = tk.Frame(card_frame, bg='#232526')
+        self.rating_buttons = []
+        rating_specs = [
+            (1, 'Einfach', '#334D37', '1'),
+            (2, 'Mittel', '#544c25', '2'),
+            (3, 'Schwer', '#4C2326', '3'),
+        ]
+        for val, txt, color, key in rating_specs:
+            btn = create_dark_button(
+                self.rating_frame,
+                txt,
+                lambda v=val: self.rate_and_next(v),
+                width=220, height=60,
+                font=('SF Pro Display', 18, 'bold'),
+                bg=color,
+                fg='white',
+                hover_bg='#34373a',
+                key=key
+            )
+            btn.pack(side='left', expand=True, padx=24, pady=10)
+            self.rating_buttons.append(btn)
+
+        def keypress(event):
+            if self.review_stage == 'answer':
+                if event.char in '123':
+                    self.rate_and_next(int(event.char))
+            elif self.review_stage == 'question':
+                if event.keysym in ('Return', 'space'):
+                    self.on_action()
+        self.rev_win.bind('<Key>', keypress)
+
+        self.card_frame = card_frame
         self.show_question()
 
     def show_question(self):
-        card=self.flashcards[self.review_index]
-        self.q_label.config(text=card['question']); self.a_label.config(text='')
-        self.action_btn.config(text='Antwort anzeigen'); self.review_stage='question'
+        card = self.flashcards[self.review_index]
+        self.q_label.config(text=card['question'])
+        self.a_label.config(text='')
+        self.action_btn.pack(pady=(8, 16))
         self.rating_frame.pack_forget()
+        self.review_stage = 'question'
+        self.action_btn.focus_set()
 
-    def on_action(self,event=None):
-        if self.review_stage=='question':
-            card=self.flashcards[self.review_index]; self.a_label.config(text=card['answer'])
-            self.rating_frame.pack(pady=10);
-            for rb in self.rating_frame.winfo_children(): rb.config(state='normal')
-            self.action_btn.config(text='Weiter (1-3 oder Enter)'); self.review_stage='answer'
-        else:
-            self.rate_and_next(self.rating_var.get())
+    def on_action(self, event=None):
+        if self.review_stage == 'question':
+            card = self.flashcards[self.review_index]
+            self.a_label.config(text=card['answer'])
+            self.action_btn.pack_forget()
+            self.rating_frame.pack(side='bottom', fill='x', pady=20)
+            self.review_stage = 'answer'
+            self.rating_buttons[0].focus_set()
 
-    def rate_and_next(self,rating):
-        card=self.flashcards[self.review_index]
-        self.session_results.append({'question':card['question'],'answer':card['answer'],'rating':rating})
-        self.review_index+=1
-        if self.review_index < len(self.flashcards): self.show_question()
+    def rate_and_next(self, rating):
+        card = self.flashcards[self.review_index]
+        self.session_results.append({
+            'question': card['question'],
+            'answer': card['answer'],
+            'rating': rating
+        })
+        self.review_index += 1
+        if self.review_index < len(self.flashcards):
+            self.show_question()
         else:
-            key=f"{self.review_data.get('learning_goal','')} (Seiten {self.review_data.get('page_range','')})"
-            try: update_progress(key,self.session_results,timestamp=datetime.now().isoformat(timespec='seconds'))
-            except: pass
-            messagebox.showinfo('Fertig','Review beendet.'); self.rev_win.destroy()
+            key = f"{self.review_data.get('learning_goal','')} (Seiten {self.review_data.get('page_range','')})"
+            try:
+                update_progress(key, self.session_results, timestamp=datetime.now().isoformat(timespec='seconds'))
+            except Exception:
+                pass
+            messagebox.showinfo('Fertig', 'Review beendet.')
+            self.rev_win.destroy()
 
 if __name__=='__main__':
     app=LernzieleViewer(); app.mainloop()
