@@ -89,15 +89,22 @@ class LernzieleViewer(tk.Tk):
         self.end_spin = tk.Spinbox(gen, from_=1, to=9999, width=5)
         self.end_spin.grid(row=1,column=2,sticky="w")
         tk.Label(gen, text="Outdir:").grid(row=2,column=0,sticky="e")
+
         self.outdir_entry = tk.Entry(gen)
         self.outdir_entry.insert(0,self.default_outdir)
         self.outdir_entry.grid(row=2,column=1,sticky="we",padx=5)
         tk.Button(gen,text="…",command=self.browse_outdir).grid(row=2,column=2)
+
         self.gen_btn = tk.Button(gen, text="Generate Flashcards", command=self.generate_flashcards, state="disabled")
         self.gen_btn.grid(row=3,column=0,columnspan=3,pady=10)
+
         self.review_btn = tk.Button(gen, text="Review Flashcards", command=self.review_current, state="disabled")
         self.review_btn.grid(row=4,column=0,columnspan=3,pady=(0,10))
         gen.columnconfigure(1, weight=1)
+
+        self.edit_btn = tk.Button(gen, text="Edit Flashcards",
+        command=self.edit_current, state="disabled")
+        self.edit_btn.grid(row=5, column=0, columnspan=3, pady=(0,10))
 
     def choose_and_load_file(self):
         path = filedialog.askopenfilename(title="Bitte Excel-Datei auswählen", filetypes=[("Excel Dateien","*.xlsx *.xls")])
@@ -127,8 +134,10 @@ class LernzieleViewer(tk.Tk):
         self.copy_btn.config(state="normal"); self.gen_btn.config(state="normal")
         if self.find_json_for_goal(text):
             self.review_btn.config(state="normal")
+            self.edit_btn.config(state="normal")
         else:
             self.review_btn.config(state="disabled")
+            self.edit_btn.config(state="normal")
 
     def find_json_for_goal(self,goal):
         outdir=self.outdir_entry.get().strip() or self.default_outdir
@@ -180,6 +189,16 @@ class LernzieleViewer(tk.Tk):
             return
         self.start_review(path)
 
+    def edit_current(self):
+        path = self.find_json_for_goal(self.current_text)
+        if not path:
+            messagebox.showerror("Fehler", "Keine Flashcards vorhanden.")
+            return
+        # lazy import keeps startup fast
+        from flashcard_editor import FlashcardEditor
+        FlashcardEditor(self, path)
+
+
     def start_review(self, json_path):
         data = load_flashcard_data(json_path)
         self.flashcards = data['flashcards']
@@ -198,29 +217,35 @@ class LernzieleViewer(tk.Tk):
         card_frame = tk.Frame(self.rev_win, bg='#232526', highlightbackground='#373B3E', highlightthickness=2)
         card_frame.pack(expand=True, fill='both', padx=40, pady=40)
 
-        self.q_label = tk.Label(
+        self.q_text = tk.Text(
             card_frame,
-            text='',
+            height=5,
             font=('SF Pro Display', 26, 'bold'),
             bg='#232526',
             fg='white',
-            wraplength=900,
-            justify='center',
-            pady=36
+            wrap='word',
+            bd=0,
+            highlightthickness=0,
+            padx=20,
+            pady=18
         )
-        self.q_label.pack(fill='x', pady=(30, 8))
+        self.q_text.pack(fill='x', pady=(30, 8))
+        self.q_text.configure(state='disabled', cursor='xterm')
 
-        self.a_label = tk.Label(
+        self.a_text = tk.Text(
             card_frame,
-            text='',
+            height=6,
             font=('SF Pro Display', 22),
             bg='#232526',
             fg='#7AB8F5',
-            wraplength=900,
-            justify='center',
-            pady=20
+            wrap='word',
+            bd=0,
+            highlightthickness=0,
+            padx=20,
+            pady=12
         )
-        self.a_label.pack(fill='x', pady=(8, 20))
+        self.a_text.pack(fill='x', pady=(8, 20))
+        self.a_text.configure(state='disabled', cursor='xterm')
 
         # --- Custom Action Button (dark, never bright) ---
         self.action_btn = create_dark_button(
@@ -272,8 +297,15 @@ class LernzieleViewer(tk.Tk):
 
     def show_question(self):
         card = self.flashcards[self.review_index]
-        self.q_label.config(text=card['question'])
-        self.a_label.config(text='')
+        self.q_text.configure(state='normal')
+        self.q_text.delete('1.0', 'end')
+        self.q_text.insert('1.0', card['question'])
+        self.q_text.configure(state='disabled')
+
+        self.a_text.configure(state='normal')
+        self.a_text.delete('1.0', 'end')
+        self.a_text.configure(state='disabled')
+
         self.action_btn.pack(pady=(8, 16))
         self.rating_frame.pack_forget()
         self.review_stage = 'question'
@@ -282,7 +314,11 @@ class LernzieleViewer(tk.Tk):
     def on_action(self, event=None):
         if self.review_stage == 'question':
             card = self.flashcards[self.review_index]
-            self.a_label.config(text=card['answer'])
+            self.a_text.configure(state='normal')
+            self.a_text.delete('1.0', 'end')
+            self.a_text.insert('1.0', card['answer'])
+            self.a_text.configure(state='disabled')
+
             self.action_btn.pack_forget()
             self.rating_frame.pack(side='bottom', fill='x', pady=20)
             self.review_stage = 'answer'

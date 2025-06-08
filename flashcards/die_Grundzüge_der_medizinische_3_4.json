@@ -1,0 +1,27 @@
+{
+  "learning_goal": "die Grundzüge der medizinischen Diagnostik, Therapie und Betreuung bei klinisch relevanter Beinlängendifferenz (z. B. bei Hüft- oder Knie-TEP oder bei Skoliose) herleiten können.",
+  "page_range": "3-4",
+  "pdf_path": "/Users/robing/Desktop/projects/Learnit/PDFs/M10_komplett.pdf",
+  "flashcards": [
+    {
+      "question": "Welche diagnostischen Methoden werden eingesetzt, um eine klinisch relevante Beinlängendifferenz zu erkennen?",
+      "answer": "Inspektion, Palpation, Funktionsprüfung, neurologische Untersuchung, Röntgenaufnahmen wie Beckenübersicht und Lauensteinaufnahme."
+    },
+    {
+      "question": "Welche konservativen Therapien werden bei Beinlängendifferenz eingesetzt?",
+      "answer": "Analgetika, Physiotherapie (Muskelkräftigung, Krankengymnastik, Massage), Bewegungstherapie, sowie Verordnungen von Hilfsmitteln wie Einlagen, Orthesen oder Gehwagen."
+    },
+    {
+      "question": "Wann ist eine Operation (z. B. Hüft-Totalendoprothese) bei einer Beinlängendifferenz indiziert?",
+      "answer": "Wenn konservative Maßnahmen nicht ausreichen und die Beinlängendifferenz zu erheblichen Beschwerden führt, kann eine OP wie eine Hüft-TEP notwendig sein!"
+    },
+    {
+      "question": "Wie beeinflusst eine Beinlängendifferenz die Betreuung und Rehabilitation von Betroffenen?",
+      "answer": "Durch frühzeitige frührehabilitative Maßnahmen, inklusive ADL-Training, Bewegungstherapie, physikalischer Therapien und interdisziplinärem Einsatz von Ergotherapeuten, Physiotherapeuten, Sozialdiensten und Orthopädietechnikern."
+    },
+    {
+      "question": "Was sind die zentralen Zielsetzungen der medizinischen Diagnostik bei klinisch relevanter Beinlängendifferenz?",
+      "answer": "Eruierung der Ursache, Bewertung des Ausmaßes, Festlegung des Therapieplans und Überwachung des Behandlungserfolgs."
+    }
+  ]
+}

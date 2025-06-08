@@ -53,9 +53,9 @@ def ask_pdf_question(
 if __name__ == "__main__":
     answer = ask_pdf_question(
         pdf_path="PDFs/M10_komplett.pdf",
-        start_page=13,
-        end_page=13,
-        question="Generiere Fragen und Antworten"
+        start_page=2,
+        end_page=2,
+        question="Bitte analysiere die Antwort zum Lernziel: Die Lage und Funktion des Oberschenkelkniestreckers (M. quadriceps femoris) als Beispiel für eine gelenksübergreifende Muskelwirkung beschreiben und erläutern können. Und verwandel den Inhalt in eine umfangreiche liste von Fragen und Antworten, die detailliert genug sind zum Lernen für das Medizinstudium."
     )
 
     print(answer)
