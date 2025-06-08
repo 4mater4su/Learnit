@@ -149,18 +149,24 @@ class FlashcardEditor(tk.Toplevel):
             "{\n  \"flashcards\": [\n    {\"question\": \"…\", \"answer\": \"…\"}, …\n  ]\n}"
         )
 
+        # Flatten prompt + JSON into one string
+        user_content = prompt + "\n\n" + json.dumps(
+            {"flashcards": self.flashcards}, ensure_ascii=False, indent=2
+        )
         user_msg = {
             "role": "user",
-            "content": [
-                {"type": "input_text", "text": prompt},
-                {"type": "input_text", "text": json.dumps({"flashcards": self.flashcards}, ensure_ascii=False)}
-            ],
+            "content": user_content,
         }
+
 
         try:
             response = CLIENT.chat.completions.create(
                 model="gpt-4o-mini",  # cheaper than full GPT‑4o for iteration
-                messages=[{"role": "system", "content": system_msg}, user_msg],
+                messages=[
+                    {"role": "system", "content": system_msg},
+                    user_msg
+                ],
+                # you can also use `response_format="json"` if your SDK version supports it
                 response_format={"type": "json_object"},
             )
             new_data = json.loads(response.choices[0].message.content)

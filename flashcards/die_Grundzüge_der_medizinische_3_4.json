@@ -8,20 +8,20 @@
       "answer": "Inspektion, Palpation, Funktionsprüfung, neurologische Untersuchung, Röntgenaufnahmen wie Beckenübersicht und Lauensteinaufnahme."
     },
     {
-      "question": "Welche konservativen Therapien werden bei Beinlängendifferenz eingesetzt?",
-      "answer": "Analgetika, Physiotherapie (Muskelkräftigung, Krankengymnastik, Massage), Bewegungstherapie, sowie Verordnungen von Hilfsmitteln wie Einlagen, Orthesen oder Gehwagen."
+      "question": "Welche Therapien gibt es bei Beinlängendifferenz?",
+      "answer": "Analgetika, Physiotherapie, Hilfsmittel wie Einlagen."
     },
     {
-      "question": "Wann ist eine Operation (z. B. Hüft-Totalendoprothese) bei einer Beinlängendifferenz indiziert?",
-      "answer": "Wenn konservative Maßnahmen nicht ausreichen und die Beinlängendifferenz zu erheblichen Beschwerden führt, kann eine OP wie eine Hüft-TEP notwendig sein!"
+      "question": "Wann ist eine OP bei Beinlängendifferenz nötig?",
+      "answer": "Wenn konservative Maßnahmen nicht helfen und Beschwerden bestehen."
     },
     {
-      "question": "Wie beeinflusst eine Beinlängendifferenz die Betreuung und Rehabilitation von Betroffenen?",
-      "answer": "Durch frühzeitige frührehabilitative Maßnahmen, inklusive ADL-Training, Bewegungstherapie, physikalischer Therapien und interdisziplinärem Einsatz von Ergotherapeuten, Physiotherapeuten, Sozialdiensten und Orthopädietechnikern."
+      "question": "Wie beeinflusst eine Beinlängendifferenz die Rehabilitation?",
+      "answer": "Frührehabilitation, ADL-Training, interdisziplinäre Betreuung."
     },
     {
-      "question": "Was sind die zentralen Zielsetzungen der medizinischen Diagnostik bei klinisch relevanter Beinlängendifferenz?",
-      "answer": "Eruierung der Ursache, Bewertung des Ausmaßes, Festlegung des Therapieplans und Überwachung des Behandlungserfolgs."
+      "question": "Was sind Ziele der Diagnostik bei Beinlängendifferenz?",
+      "answer": "Ursache finden, Ausmaß bewerten, Therapie planen."
     }
   ]
 }
