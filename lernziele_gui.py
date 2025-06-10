@@ -149,14 +149,18 @@ class LernzieleViewer(tk.Tk):
         self.slice_btn.grid(row=2, column=0, columnspan=3, pady=8)
         pdfslice.columnconfigure(1, weight=1)
 
+        # Checkboxes for selecting the PDFs used for generating flashcards
+        self.pdf_checkboxes = {}   # filename → tk.BooleanVar
+        self.pdf_checkbox_frame = None  # will be created dynamically
 
         # Flashcard Generator
         gen = tk.LabelFrame(self.scrollable_frame, text="Flashcards generieren")
         gen.pack(fill="x", padx=10, pady=(0,10))
         tk.Label(gen, text="Outdir:").grid(row=2,column=0,sticky="e")
         tk.Label(gen, text="PDF wählen:").grid(row=0, column=0, sticky="e")
-        self.pdf_listbox = tk.Listbox(gen, selectmode="extended", height=4)
-        self.pdf_listbox.grid(row=0, column=1, columnspan=2, sticky="we", padx=5, pady=2)
+        self.pdf_checkbox_frame = tk.Frame(gen)
+        self.pdf_checkbox_frame.grid(row=0, column=1, columnspan=2, sticky="we", padx=5, pady=2)
+
         gen.columnconfigure(1, weight=1)
 
         self.outdir_entry = tk.Entry(gen)
@@ -412,23 +416,31 @@ class LernzieleViewer(tk.Tk):
             self.listbox.itemconfig(i,bg=color)
 
     def update_pdf_list_for_goal(self, goal):
-        self.pdf_listbox.delete(0, tk.END)
+        # Clear old checkboxes
+        for widget in self.pdf_checkbox_frame.winfo_children():
+            widget.destroy()
+        self.pdf_checkboxes.clear()
+
         dirname = sanitize_dirname(goal)
         outdir = self.outdir_entry.get().strip() or self.default_outdir
         dirpath = os.path.join(outdir, dirname)
         if not os.path.isdir(dirpath):
-            self.pdf_listbox.insert(tk.END, "(Kein Verzeichnis angelegt)")
+            tk.Label(self.pdf_checkbox_frame, text="(Kein Verzeichnis angelegt)").pack(anchor="w")
             return
         files = sorted([f for f in os.listdir(dirpath) if f.lower().endswith('.pdf') and os.path.isfile(os.path.join(dirpath, f))])
         if not files:
-            self.pdf_listbox.insert(tk.END, "(Keine PDFs gefunden)")
+            tk.Label(self.pdf_checkbox_frame, text="(Keine PDFs gefunden)").pack(anchor="w")
         else:
             for f in files:
-                self.pdf_listbox.insert(tk.END, f)
+                var = tk.BooleanVar()
+                chk = tk.Checkbutton(self.pdf_checkbox_frame, text=f, variable=var, anchor="w")
+                chk.pack(anchor="w")
+                self.pdf_checkboxes[f] = var
 
     def generate_flashcards(self):
-        sels = self.pdf_listbox.curselection()
-        if not sels:
+        # Collect checked PDFs
+        selected_pdfs = [fname for fname, var in self.pdf_checkboxes.items() if var.get()]
+        if not selected_pdfs:
             messagebox.showerror("Fehler", "Bitte wählen Sie mindestens eine PDF-Datei aus.")
             return
 
@@ -438,11 +450,7 @@ class LernzieleViewer(tk.Tk):
         errors = []
         created = []
 
-        for idx in sels:
-            pdf_filename = self.pdf_listbox.get(idx)
-            if not pdf_filename.lower().endswith('.pdf'):
-                continue  # Skip non-PDFs, just in case
-
+        for pdf_filename in selected_pdfs:
             pdf_path = os.path.join(outdir, dirname, pdf_filename)
             try:
                 # Get total number of pages for this PDF
@@ -457,7 +465,7 @@ class LernzieleViewer(tk.Tk):
                     errors.append(f"{pdf_filename}: Batch existiert.")
                     continue
 
-                # The function signature stays the same
+                # Call your LLM flashcard generator
                 generate_flashcards_from_pdf(
                     pdf_path=pdf_path,
                     page_range=page_range,
@@ -468,14 +476,24 @@ class LernzieleViewer(tk.Tk):
             except Exception as e:
                 errors.append(f"{pdf_filename}: {e}")
 
-        # User feedback
+        # Feedback for user
         if created:
-            messagebox.showinfo("Erfolg", f"Flashcards für {len(created)} PDF(s) erstellt:\n" + "\n".join(created))
+            messagebox.showinfo(
+                "Erfolg",
+                f"Flashcards für {len(created)} PDF(s) erstellt:\n" + "\n".join(created)
+            )
             idx = self.lernziele.index(goal)
             self.listbox.itemconfig(idx, bg="#316417")
             self.review_btn.config(state="normal")
         if errors:
-            messagebox.showerror("Fehler", "Bei einigen PDFs gab es Probleme:\n" + "\n".join(errors))
+            messagebox.showerror(
+                "Fehler",
+                "Bei einigen PDFs gab es Probleme:\n" + "\n".join(errors)
+            )
+
+        # (Optional) Uncheck all after run
+        for var in self.pdf_checkboxes.values():
+            var.set(False)
 
 
     def review_current(self):

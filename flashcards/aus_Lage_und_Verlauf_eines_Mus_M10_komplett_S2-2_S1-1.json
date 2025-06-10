@@ -4,24 +4,24 @@
   "pdf_path": "flashcards/aus_Lage_und_Verlauf_eines_Muskels_und_seiner_Sehnen_seine_Wirkungen_auf_ein_Gelenk_herleiten_k_nnen/M10_komplett_S2-2.pdf",
   "flashcards": [
     {
-      "question": "Wie kann man die Wirkung eines Muskels auf ein Gelenk anhand seiner Lage und seines Verlaufs ableiten?",
-      "answer": "Die Wirkung kann durch Betrachtung des Ursprungs und Ansatzes des Muskels sowie seiner Richtung und Verlauf im Verhältnis zum Gelenk geschlossen werden, z.B. ob er Flexion, Extension oder Rotation bewirkt."
+      "question": "Wie lässt sich die Wirkung eines Muskels auf ein Gelenk anhand seiner Lage und des Verlaufs seiner Sehnen bestimmen?",
+      "answer": "Man analysiert den Ursprung, Ansatz und Verlauf der Sehnen des Muskels, um zu erkennen, welche Gelenke bei Muskelkontraktion bewegt oder stabilisiert werden. Der Vielseitigkeit der Wirkung hängt von der Richtung der Muskel fibras versus die Gelenkstruktur ab."
     },
     {
-      "question": "Was ermöglicht die Kenntnis der Sehnenlage eines Muskels bei der Bestimmung seiner Wirkung auf ein Gelenk?",
-      "answer": "Da die Sehnen die Ansatzstellen sind, zeigt ihre Lage an, in welche Richtung der Muskel Kraft ausübt, und somit welche Bewegungen am Gelenk entstehen."
+      "question": "Was kann man aus der Lage und dem Verlauf eines Muskels im Bezug auf seine Funktion schließen?",
+      "answer": "Aus der Position des Muskels und seiner Sehnen lassen sich Rückschlüsse auf seine Bewegungsrichtung, die er verursacht, und seine Rolle bei Stabilisierung oder Beweglichkeit des Gelenks ziehen."
     },
     {
-      "question": "Warum ist es wichtig, den Verlauf eines Muskels zu kennen, um seine Funktion zu verstehen?",
-      "answer": "Der Verlauf gibt Hinweise darauf, in welche Richtung die Zugkraft wirkt, und ermöglicht Rückschlüsse auf die Bewegungsrichtungen, die durch den Muskel beeinflusst werden."
+      "question": "Welche Bedeutung hat der Ursprung und Ansatz eines Muskels für seine Wirkung auf das Gelenk?",
+      "answer": "Der Ursprung ist meist stationär und gibt die Fixierung des Muskels wieder, während der Ansatz die Bewegungsrichtung bestimmt; zusammen bestimmen sie, welche Gelenkbewegungen durch den Muskel ausgelöst werden."
     },
     {
-      "question": "Wie lässt sich die Wirkung des M. quadriceps femoris auf das Kniegelenk erklären, basierend auf seinen Ursprung und Ansatz?",
-      "answer": "Der M. quadriceps femoris, der an der Tuberositas tibiae ansetzt und den Oberschenkelvorderrand hat, ist primär für die Knieextension verantwortlich, weil seine Zugrichtung in diese Bewegungsrichtung wirkt."
+      "question": "Wie beeinflusst die Lage eines Muskels die Stabilisierung eines Gelenks?",
+      "answer": "Die Lage eines Muskels in Bezug auf das Gelenk und seine Sehnenführung ermöglicht es ihm, das Gelenk in bestimmten Positionen zu stabilisieren oder mögliche Kippbewegungen zu verhindern."
     },
     {
-      "question": "Welche Rolle spielt die Lage des Muskelansatzes in Bezug auf den Gelenkverlauf bei der Bestimmung der Muskelwirkung?",
-      "answer": "Der Ansatz bestimmt, in welche Richtung der Muskel Kräfte auf das Knochen- und Gelenksystem ausübt, wodurch man auf die verursachten Bewegungen schließen kann."
+      "question": "Wie lässt sich die Funktion eines Muskels anhand des Verlaufs seiner Sehnen in Bezug auf das Gelenk interpretieren?",
+      "answer": "Der Verlauf der Sehnen zeigt, ob ein Muskel primär die Bewegung eines Gelenks ermöglicht, stabilisiert oder beides tut, basierend auf seiner Position und Richtung des Kräftefeldes."
     }
   ]
 }
