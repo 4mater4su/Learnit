@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import shutil
 import os
 import json
 import tkinter as tk
@@ -86,6 +87,9 @@ class LernzieleViewer(tk.Tk):
         self.mkdir_btn = tk.Button(details, text="Verzeichnis anlegen", command=self.create_goal_directory, state="disabled")
         self.mkdir_btn.pack(pady=5)
 
+        self.adddoc_btn = tk.Button(details, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
+        self.adddoc_btn.pack(pady=5)
+
         # Flashcard Generator
         gen = tk.LabelFrame(self, text="Flashcards generieren")
         gen.pack(fill="x", padx=10, pady=(0,10))
@@ -133,7 +137,7 @@ class LernzieleViewer(tk.Tk):
             if self.find_json_for_goal(txt):
                 self.listbox.itemconfig(i-1, bg="#316417")
         self.title(f"Lernziele Viewer — {os.path.basename(path)}")
-        self.copy_btn.config(state="disabled"); self.gen_btn.config(state="disabled"); self.review_btn.config(state="disabled"); self.mkdir_btn.config(state="disabled")
+        self.copy_btn.config(state="disabled"); self.gen_btn.config(state="disabled"); self.review_btn.config(state="disabled"); self.mkdir_btn.config(state="disabled"); self.adddoc_btn.config(state="disabled")
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.config(state="disabled")
 
     def on_select(self,event):
@@ -141,8 +145,7 @@ class LernzieleViewer(tk.Tk):
         if not sel: return
         idx=sel[0]; text=self.lernziele[idx]; self.current_text=text
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.insert("end",text); self.details_text.config(state="disabled")
-        self.copy_btn.config(state="normal"); self.gen_btn.config(state="normal")
-        self.mkdir_btn.config(state="normal")
+        self.copy_btn.config(state="normal"); self.gen_btn.config(state="normal"); self.mkdir_btn.config(state="normal"); self.adddoc_btn.config(state="normal")
 
         if self.find_json_for_goal(text):
             self.review_btn.config(state="normal")
@@ -181,6 +184,32 @@ class LernzieleViewer(tk.Tk):
             messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
         except Exception as e:
             messagebox.showerror("Fehler", f"Verzeichnis konnte nicht erstellt werden:\n{e}")
+
+    def add_document_to_goal(self):
+        if not self.current_text:
+            messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
+            return
+        dirname = sanitize_dirname(self.current_text)
+        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        target_dir = os.path.join(outdir, dirname)
+        if not os.path.isdir(target_dir):
+            messagebox.showerror("Fehler", "Das Verzeichnis existiert nicht. Bitte zuerst anlegen.")
+            return
+        files = filedialog.askopenfilenames(title="Dokument(e) auswählen")
+        if not files:
+            return
+        errors = []
+        for f in files:
+            try:
+                # Keep filename only
+                dest = os.path.join(target_dir, os.path.basename(f))
+                shutil.copy2(f, dest)
+            except Exception as e:
+                errors.append(f"{f}: {e}")
+        if not errors:
+            messagebox.showinfo("Erfolg", "Dokument(e) hinzugefügt.")
+        else:
+            messagebox.showerror("Fehler beim Kopieren", "\n".join(errors))
 
     def browse_pdf(self):
         p=filedialog.askopenfilename(title="PDF auswählen",filetypes=[("PDF","*.pdf")])
