@@ -80,6 +80,15 @@ class LernzieleViewer(tk.Tk):
         details.pack(fill="x", padx=10, pady=(0,10))
         self.details_text = tk.Text(details, height=4, wrap="word", state="disabled")
         self.details_text.pack(fill="both", expand=True)
+
+        # File list label
+        self.filelist_label = tk.Label(details, text="Dateien im Verzeichnis:", anchor="w")
+        self.filelist_label.pack(fill="x", padx=4, pady=(2,0))
+
+        # File listbox
+        self.filelist_box = tk.Listbox(details, height=4, activestyle='dotbox')
+        self.filelist_box.pack(fill="both", expand=False, padx=4, pady=(0,4))
+
         
         self.copy_btn = tk.Button(details, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
         self.copy_btn.pack(pady=5)
@@ -153,6 +162,8 @@ class LernzieleViewer(tk.Tk):
         else:
             self.review_btn.config(state="disabled")
             self.edit_btn.config(state="normal")
+        
+        self.update_filelist_for_goal(self.current_text)
 
     def find_json_for_goal(self,goal):
         outdir=self.outdir_entry.get().strip() or self.default_outdir
@@ -184,6 +195,7 @@ class LernzieleViewer(tk.Tk):
             messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
         except Exception as e:
             messagebox.showerror("Fehler", f"Verzeichnis konnte nicht erstellt werden:\n{e}")
+        self.update_filelist_for_goal(self.current_text)
 
     def add_document_to_goal(self):
         if not self.current_text:
@@ -210,6 +222,23 @@ class LernzieleViewer(tk.Tk):
             messagebox.showinfo("Erfolg", "Dokument(e) hinzugefügt.")
         else:
             messagebox.showerror("Fehler beim Kopieren", "\n".join(errors))
+        self.update_filelist_for_goal(self.current_text)
+
+    def update_filelist_for_goal(self, goal):
+        self.filelist_box.delete(0, tk.END)
+        dirname = sanitize_dirname(goal)
+        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        dirpath = os.path.join(outdir, dirname)
+        if not os.path.isdir(dirpath):
+            self.filelist_box.insert(tk.END, "(Kein Verzeichnis angelegt)")
+            return
+        files = sorted([f for f in os.listdir(dirpath) if os.path.isfile(os.path.join(dirpath, f))])
+        if not files:
+            self.filelist_box.insert(tk.END, "(Keine Dateien vorhanden)")
+        else:
+            for f in files:
+                self.filelist_box.insert(tk.END, f)
+
 
     def browse_pdf(self):
         p=filedialog.askopenfilename(title="PDF auswählen",filetypes=[("PDF","*.pdf")])
