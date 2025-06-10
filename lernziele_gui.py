@@ -255,16 +255,12 @@ class LernzieleViewer(tk.Tk):
         self.update_filelist_for_goal(self.current_text)
         self.update_pdf_list_for_goal(self.current_text)
 
-    def find_json_for_goal(self,goal):
-        outdir=self.outdir_entry.get().strip() or self.default_outdir
-        if not os.path.isdir(outdir): return None
-        for f in os.listdir(outdir):
-            if f.endswith('.json'):
-                try:
-                    d=json.load(open(os.path.join(outdir,f),encoding='utf-8'))
-                    if d.get('learning_goal')==goal:
-                        return os.path.join(outdir,f)
-                except: pass
+    def find_json_for_goal(self, goal):
+        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        dirname = sanitize_dirname(goal)
+        json_path = os.path.join(outdir, dirname, "flashcards.json")
+        if os.path.isfile(json_path):
+            return json_path
         return None
 
     def copy_to_clipboard(self):
@@ -486,9 +482,11 @@ class LernzieleViewer(tk.Tk):
                     reader = PdfReader(f)
                     num_pages = len(reader.pages)
                 page_range = (1, num_pages)
-                base = os.path.splitext(pdf_filename)[0]
-                fn = f"{goal.replace(' ','_')[:30]}_{base}_S{page_range[0]}-{page_range[1]}.json"
-                out_json = os.path.join(outdir, fn)
+                
+                goal_dir = os.path.join(outdir, dirname)
+                os.makedirs(goal_dir, exist_ok=True)
+                out_json = os.path.join(goal_dir, "flashcards.json")
+
                 if os.path.exists(out_json):
                     errors.append(f"{pdf_filename}: Batch existiert.")
                     continue
