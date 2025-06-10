@@ -81,10 +81,12 @@ class LernzieleViewer(tk.Tk):
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # --- Make mousewheel scroll work everywhere ---
-        def _on_mousewheel(event):
+        def _on_main_canvas_mousewheel(event):
             self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        self.canvas.bind("<Enter>", lambda e: self.canvas.bind_all("<MouseWheel>", _on_main_canvas_mousewheel))
+        self.canvas.bind("<Leave>", lambda e: self.canvas.unbind_all("<MouseWheel>"))
+
 
         self.default_outdir = "flashcards"
         self.lernziele = []
@@ -158,8 +160,33 @@ class LernzieleViewer(tk.Tk):
         gen.pack(fill="x", padx=10, pady=(0,10))
         tk.Label(gen, text="Outdir:").grid(row=2,column=0,sticky="e")
         tk.Label(gen, text="PDF wählen:").grid(row=0, column=0, sticky="e")
-        self.pdf_checkbox_frame = tk.Frame(gen)
-        self.pdf_checkbox_frame.grid(row=0, column=1, columnspan=2, sticky="we", padx=5, pady=2)
+        # --- Begin scrollable checkbox area ---
+        self.pdf_checkbox_canvas = tk.Canvas(gen, height=120, highlightthickness=0)
+        self.pdf_checkbox_scrollbar = tk.Scrollbar(gen, orient="vertical", command=self.pdf_checkbox_canvas.yview)
+        self.pdf_checkbox_inner_frame = tk.Frame(self.pdf_checkbox_canvas)
+
+        self.pdf_checkbox_inner_frame.bind(
+            "<Configure>",
+            lambda e: self.pdf_checkbox_canvas.configure(
+                scrollregion=self.pdf_checkbox_canvas.bbox("all")
+            )
+        )
+
+        self.pdf_checkbox_canvas.create_window((0, 0), window=self.pdf_checkbox_inner_frame, anchor="nw")
+        self.pdf_checkbox_canvas.configure(yscrollcommand=self.pdf_checkbox_scrollbar.set)
+
+        self.pdf_checkbox_canvas.grid(row=0, column=1, sticky="nsew", padx=5, pady=2)
+        self.pdf_checkbox_scrollbar.grid(row=0, column=2, sticky="ns", padx=(0, 2))
+        gen.grid_rowconfigure(0, weight=1)
+        gen.grid_columnconfigure(1, weight=1)
+        # --- End scrollable checkbox area ---
+
+        # Mousewheel Support for the Scrollable Checkbox Frame
+        def _on_checkbox_mousewheel(event):
+            self.pdf_checkbox_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        self.pdf_checkbox_canvas.bind("<Enter>", lambda e: self.pdf_checkbox_canvas.bind_all("<MouseWheel>", _on_checkbox_mousewheel))
+        self.pdf_checkbox_canvas.bind("<Leave>", lambda e: self.pdf_checkbox_canvas.unbind_all("<MouseWheel>"))
+
 
         gen.columnconfigure(1, weight=1)
 
@@ -417,7 +444,7 @@ class LernzieleViewer(tk.Tk):
 
     def update_pdf_list_for_goal(self, goal):
         # Clear old checkboxes
-        for widget in self.pdf_checkbox_frame.winfo_children():
+        for widget in self.pdf_checkbox_inner_frame.winfo_children():
             widget.destroy()
         self.pdf_checkboxes.clear()
 
@@ -425,17 +452,18 @@ class LernzieleViewer(tk.Tk):
         outdir = self.outdir_entry.get().strip() or self.default_outdir
         dirpath = os.path.join(outdir, dirname)
         if not os.path.isdir(dirpath):
-            tk.Label(self.pdf_checkbox_frame, text="(Kein Verzeichnis angelegt)").pack(anchor="w")
+            tk.Label(self.pdf_checkbox_inner_frame, text="(Kein Verzeichnis angelegt)").pack(anchor="w")
             return
         files = sorted([f for f in os.listdir(dirpath) if f.lower().endswith('.pdf') and os.path.isfile(os.path.join(dirpath, f))])
         if not files:
-            tk.Label(self.pdf_checkbox_frame, text="(Keine PDFs gefunden)").pack(anchor="w")
+            tk.Label(self.pdf_checkbox_inner_frame, text="(Keine PDFs gefunden)").pack(anchor="w")
         else:
             for f in files:
                 var = tk.BooleanVar()
-                chk = tk.Checkbutton(self.pdf_checkbox_frame, text=f, variable=var, anchor="w")
-                chk.pack(anchor="w")
+                chk = tk.Checkbutton(self.pdf_checkbox_inner_frame, text=f, variable=var, anchor="w")
+                chk.pack(anchor="w", fill="x")
                 self.pdf_checkboxes[f] = var
+
 
     def generate_flashcards(self):
         # Collect checked PDFs
