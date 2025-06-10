@@ -12,6 +12,12 @@ from flashcard_manager import (
     load_flashcard_data,
     update_progress
 )
+import re
+
+def sanitize_dirname(name):
+    # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
+    sanitized = re.sub(r'[^A-Za-z0-9_\-]', '_', name.replace(' ', '_'))
+    return sanitized[:100]
 
 def create_dark_button(parent, text, command, width=400, height=60, font=('SF Pro Display', 20, 'bold'), bg='#232526', fg='white', hover_bg='#34373a', key=None):
     canvas = tk.Canvas(parent, height=height, width=width, bg=bg, highlightthickness=0, bd=0)
@@ -68,13 +74,17 @@ class LernzieleViewer(tk.Tk):
         v_scroll.config(command=self.listbox.yview)
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
-        # Detail
+        # Detail & Make Directory
         details = tk.LabelFrame(self, text="Ausgewähltes Lernziel")
         details.pack(fill="x", padx=10, pady=(0,10))
         self.details_text = tk.Text(details, height=4, wrap="word", state="disabled")
         self.details_text.pack(fill="both", expand=True)
+        
         self.copy_btn = tk.Button(details, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
         self.copy_btn.pack(pady=5)
+
+        self.mkdir_btn = tk.Button(details, text="Verzeichnis anlegen", command=self.create_goal_directory, state="disabled")
+        self.mkdir_btn.pack(pady=5)
 
         # Flashcard Generator
         gen = tk.LabelFrame(self, text="Flashcards generieren")
@@ -123,7 +133,7 @@ class LernzieleViewer(tk.Tk):
             if self.find_json_for_goal(txt):
                 self.listbox.itemconfig(i-1, bg="#316417")
         self.title(f"Lernziele Viewer — {os.path.basename(path)}")
-        self.copy_btn.config(state="disabled"); self.gen_btn.config(state="disabled"); self.review_btn.config(state="disabled")
+        self.copy_btn.config(state="disabled"); self.gen_btn.config(state="disabled"); self.review_btn.config(state="disabled"); self.mkdir_btn.config(state="disabled")
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.config(state="disabled")
 
     def on_select(self,event):
@@ -132,6 +142,8 @@ class LernzieleViewer(tk.Tk):
         idx=sel[0]; text=self.lernziele[idx]; self.current_text=text
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.insert("end",text); self.details_text.config(state="disabled")
         self.copy_btn.config(state="normal"); self.gen_btn.config(state="normal")
+        self.mkdir_btn.config(state="normal")
+
         if self.find_json_for_goal(text):
             self.review_btn.config(state="normal")
             self.edit_btn.config(state="normal")
@@ -154,6 +166,21 @@ class LernzieleViewer(tk.Tk):
     def copy_to_clipboard(self):
         self.clipboard_clear(); self.clipboard_append(self.current_text)
         messagebox.showinfo("Kopiert","Lernziel kopiert.")
+
+    def create_goal_directory(self):
+        if not self.current_text:
+            messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
+            return
+        dirname = sanitize_dirname(self.current_text)
+        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        full_path = os.path.join(outdir, dirname)
+        try:
+            os.makedirs(full_path, exist_ok=False)
+            messagebox.showinfo("Erfolg", f"Verzeichnis erstellt: {full_path}")
+        except FileExistsError:
+            messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Verzeichnis konnte nicht erstellt werden:\n{e}")
 
     def browse_pdf(self):
         p=filedialog.askopenfilename(title="PDF auswählen",filetypes=[("PDF","*.pdf")])
@@ -197,7 +224,6 @@ class LernzieleViewer(tk.Tk):
         # lazy import keeps startup fast
         from flashcard_editor import FlashcardEditor
         FlashcardEditor(self, path)
-
 
     def start_review(self, json_path):
         data = load_flashcard_data(json_path)
