@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import subprocess
+import sys
 import shutil
 import os
 import json
@@ -88,8 +90,9 @@ class LernzieleViewer(tk.Tk):
         # File listbox
         self.filelist_box = tk.Listbox(details, height=4, activestyle='dotbox')
         self.filelist_box.pack(fill="both", expand=False, padx=4, pady=(0,4))
+        self.filelist_box.bind('<Double-Button-1>', self.open_selected_file)
+        self.filelist_box.bind('<Button-2>', self.show_file_context_menu)  # Right-click on most systems | On Mac, <Button-2> is sometimes used
 
-        
         self.copy_btn = tk.Button(details, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
         self.copy_btn.pack(pady=5)
 
@@ -239,6 +242,60 @@ class LernzieleViewer(tk.Tk):
             for f in files:
                 self.filelist_box.insert(tk.END, f)
 
+    def open_selected_file(self, event=None):
+        sel = self.filelist_box.curselection()
+        if not sel:
+            return
+        filename = self.filelist_box.get(sel[0])
+        if filename.startswith('('):  # Not a real file
+            return
+        dirname = sanitize_dirname(self.current_text)
+        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        filepath = os.path.join(outdir, dirname, filename)
+        try:
+            if sys.platform.startswith('darwin'):
+                subprocess.call(('open', filepath))
+            elif sys.platform.startswith('win'):
+                os.startfile(filepath)
+            else:
+                subprocess.call(('xdg-open', filepath))
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Datei konnte nicht geöffnet werden:\n{e}")
+        self.update_filelist_for_goal(self.current_text)
+
+    def remove_selected_file(self, event=None):
+        sel = self.filelist_box.curselection()
+        if not sel:
+            return
+        filename = self.filelist_box.get(sel[0])
+        if filename.startswith('('):  # Not a real file
+            return
+        dirname = sanitize_dirname(self.current_text)
+        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        filepath = os.path.join(outdir, dirname, filename)
+        answer = messagebox.askyesno("Datei löschen", f"Möchten Sie die Datei wirklich löschen?\n\n{filename}")
+        if answer:
+            try:
+                os.remove(filepath)
+                self.update_filelist_for_goal(self.current_text)
+            except Exception as e:
+                messagebox.showerror("Fehler", f"Datei konnte nicht gelöscht werden:\n{e}")
+
+    def show_file_context_menu(self, event):
+        sel = self.filelist_box.nearest(event.y)
+        if sel < 0:
+            return
+        self.filelist_box.selection_clear(0, tk.END)
+        self.filelist_box.selection_set(sel)
+        filename = self.filelist_box.get(sel)
+        if filename.startswith('('):
+            return
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="Datei löschen", command=self.remove_selected_file)
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
 
     def browse_pdf(self):
         p=filedialog.askopenfilename(title="PDF auswählen",filetypes=[("PDF","*.pdf")])
