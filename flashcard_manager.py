@@ -19,7 +19,7 @@ PROGRESS_PATH = "progress.json"  # stores all batches’ progress
 
 # ──────────────────── PDF EXTRACTION & FLASHCARD GEN ────────────────────
 
-def extract_pdf_pages(input_pdf: str, output_pdf: str, start: int, end: int) -> None:
+def slice_pdf(input_pdf: str, output_pdf: str, start: int, end: int) -> None:
     """
     Extracts pages [start..end] from input_pdf into output_pdf.
     Page numbers are 1-based inclusive.
@@ -53,7 +53,7 @@ def generate_flashcards_from_pdf(
     start, end = page_range
     os.makedirs(temp_dir, exist_ok=True)
     extracted_pdf = os.path.join(temp_dir, f"extracted_{start}_{end}.pdf")
-    extract_pdf_pages(pdf_path, extracted_pdf, start, end)
+    slice_pdf(pdf_path, extracted_pdf, start, end)
 
     # Upload to OpenAI Files
     with open(extracted_pdf, "rb") as f:
