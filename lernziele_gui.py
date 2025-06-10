@@ -60,17 +60,43 @@ class LernzieleViewer(tk.Tk):
         self.title("Lernziele Viewer")
         self.geometry("800x800")
 
+        # --- Scrollable main content setup ---
+        self.container = tk.Frame(self)
+        self.container.pack(fill="both", expand=True)
+
+        self.canvas = tk.Canvas(self.container, borderwidth=0)
+        self.scrollbar = tk.Scrollbar(self.container, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.scrollable_frame = tk.Frame(self.canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
+
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        # --- Make mousewheel scroll work everywhere ---
+        def _on_mousewheel(event):
+            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
         self.default_outdir = "flashcards"
         self.lernziele = []
         self.current_text = ""
 
         # Oben: Excel laden
-        top_frame = tk.Frame(self, pady=10)
+        top_frame = tk.Frame(self.scrollable_frame, pady=10)
         top_frame.pack(fill="x")
         tk.Button(top_frame, text="Excel öffnen…", command=self.choose_and_load_file, width=15).pack(side="left", padx=10)
 
         # Listbox
-        list_frame = tk.Frame(self)
+        list_frame = tk.Frame(self.scrollable_frame)
         list_frame.pack(fill="both", expand=True, padx=10, pady=(0,10))
         v_scroll = tk.Scrollbar(list_frame, orient="vertical")
         v_scroll.pack(side="right", fill="y")
@@ -80,7 +106,7 @@ class LernzieleViewer(tk.Tk):
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
         # Detail & Make Directory
-        details = tk.LabelFrame(self, text="Ausgewähltes Lernziel")
+        details = tk.LabelFrame(self.scrollable_frame, text="Ausgewähltes Lernziel")
         details.pack(fill="x", padx=10, pady=(0,10))
         self.details_text = tk.Text(details, height=4, wrap="word", state="disabled")
         self.details_text.pack(fill="both", expand=True)
@@ -105,7 +131,7 @@ class LernzieleViewer(tk.Tk):
         self.adddoc_btn.pack(pady=5)
 
         # PDF Slicing and copying to lz directory
-        pdfslice = tk.LabelFrame(self, text="PDF zuschneiden und speichern")
+        pdfslice = tk.LabelFrame(self.scrollable_frame, text="PDF zuschneiden und speichern")
         pdfslice.pack(fill="x", padx=10, pady=(0,10))
 
         tk.Label(pdfslice, text="PDF:").grid(row=0, column=0, sticky="e")
@@ -125,7 +151,7 @@ class LernzieleViewer(tk.Tk):
 
 
         # Flashcard Generator
-        gen = tk.LabelFrame(self, text="Flashcards generieren")
+        gen = tk.LabelFrame(self.scrollable_frame, text="Flashcards generieren")
         gen.pack(fill="x", padx=10, pady=(0,10))
         tk.Label(gen, text="Outdir:").grid(row=2,column=0,sticky="e")
         tk.Label(gen, text="PDF wählen:").grid(row=0, column=0, sticky="e")
@@ -224,11 +250,13 @@ class LernzieleViewer(tk.Tk):
         try:
             os.makedirs(full_path, exist_ok=False)
             messagebox.showinfo("Erfolg", f"Verzeichnis erstellt: {full_path}")
+            self.update_filelist_for_goal(self.current_text)
+            self.update_pdf_list_for_goal(self.current_text)
         except FileExistsError:
             messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
         except Exception as e:
             messagebox.showerror("Fehler", f"Verzeichnis konnte nicht erstellt werden:\n{e}")
-        self.update_filelist_for_goal(self.current_text)
+        
 
     def add_document_to_goal(self):
         if not self.current_text:
@@ -253,9 +281,11 @@ class LernzieleViewer(tk.Tk):
                 errors.append(f"{f}: {e}")
         if not errors:
             messagebox.showinfo("Erfolg", "Dokument(e) hinzugefügt.")
+            self.update_filelist_for_goal(self.current_text)
+            self.update_pdf_list_for_goal(self.current_text)
         else:
             messagebox.showerror("Fehler beim Kopieren", "\n".join(errors))
-        self.update_filelist_for_goal(self.current_text)
+        
 
     def update_filelist_for_goal(self, goal):
         self.filelist_box.delete(0, tk.END)
@@ -289,9 +319,10 @@ class LernzieleViewer(tk.Tk):
                 os.startfile(filepath)
             else:
                 subprocess.call(('xdg-open', filepath))
+            self.update_filelist_for_goal(self.current_text)
+            self.update_pdf_list_for_goal(self.current_text)
         except Exception as e:
             messagebox.showerror("Fehler", f"Datei konnte nicht geöffnet werden:\n{e}")
-        self.update_filelist_for_goal(self.current_text)
 
     def remove_selected_file(self, event=None):
         sel = self.filelist_box.curselection()
@@ -308,6 +339,7 @@ class LernzieleViewer(tk.Tk):
             try:
                 os.remove(filepath)
                 self.update_filelist_for_goal(self.current_text)
+                self.update_pdf_list_for_goal(self.current_text)
             except Exception as e:
                 messagebox.showerror("Fehler", f"Datei konnte nicht gelöscht werden:\n{e}")
 
@@ -348,6 +380,7 @@ class LernzieleViewer(tk.Tk):
             slice_pdf(in_pdf, out_pdf, start, end)  # <---- Corrected call
             messagebox.showinfo("Erfolg", f"PDF gespeichert: {out_pdf}")
             self.update_filelist_for_goal(self.current_text)
+            self.update_pdf_list_for_goal(self.current_text)
         except Exception as e:
             messagebox.showerror("Fehler", f"PDF konnte nicht gespeichert werden:\n{e}")
 
