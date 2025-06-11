@@ -3,9 +3,9 @@ import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 from typing import List, Dict, Any
-
-# PDF support
 from PyPDF2 import PdfReader
+
+from flashcard_manager import remove_card_progress, remove_batch_progress
 
 try:
     # Re‑use the global OpenAI() instance from flashcard_manager if available
@@ -166,8 +166,13 @@ class FlashcardEditor(tk.Toplevel):
     def _delete_card(self):
         if self.selected_index is None:
             return
+        card = self.flashcards[self.selected_index]  # Save before delete!
         if messagebox.askyesno("Löschen", "Diese Karte wirklich löschen?"):
             del self.flashcards[self.selected_index]
+            # Remove progress for this card
+            batch_key = f"{self.batch.get('learning_goal','')} (Seiten {self.batch.get('page_range','')})"
+            from flashcard_manager import remove_card_progress
+            remove_card_progress(batch_key, card["question"])
             self._populate_listbox()
             if self.flashcards:
                 new_idx = max(0, self.selected_index - 1)
@@ -177,6 +182,7 @@ class FlashcardEditor(tk.Toplevel):
                 self.selected_index = None
                 self.q_text.delete("1.0", "end")
                 self.a_text.delete("1.0", "end")
+
 
     def _delete_batch(self):
         if messagebox.askyesno("Batch löschen", "Wirklich den gesamten Batch und die zugehörige JSON-Datei löschen? Dieser Vorgang kann nicht rückgängig gemacht werden."):
@@ -192,6 +198,9 @@ class FlashcardEditor(tk.Toplevel):
                 # Get learning_goal string (already loaded earlier)
                 goal = self.batch.get("learning_goal", "")
                 self.master.refresh_goal_color(goal)
+
+            batch_key = f"{goal} (Seiten {self.batch.get('page_range','')})"
+            remove_batch_progress(batch_key)
 
             self.destroy()
 

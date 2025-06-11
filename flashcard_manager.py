@@ -191,3 +191,28 @@ def update_progress(
         goal_block.setdefault("_sessions", []).append(timestamp)
 
     _save_progress(progress, path)
+
+
+def remove_batch_progress(batch_key: str, path: str = PROGRESS_PATH):
+    """Remove all progress entries for a batch_key."""
+    if not os.path.exists(path):
+        return
+    with open(path, "r", encoding="utf-8") as f:
+        progress = json.load(f)
+    if batch_key in progress:
+        del progress[batch_key]
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(progress, f, indent=2, ensure_ascii=False)
+
+
+def remove_card_progress(batch_key: str, question: str, path: str = PROGRESS_PATH):
+    """Remove progress for a specific question in a batch."""
+    if not os.path.exists(path):
+        return
+    with open(path, "r", encoding="utf-8") as f:
+        progress = json.load(f)
+    block = progress.get(batch_key)
+    if block and question in block:
+        del block[question]
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(progress, f, indent=2, ensure_ascii=False)
