@@ -102,8 +102,8 @@ class LernzieleViewer(tk.Tk):
         list_frame.pack(fill="both", expand=True, padx=10, pady=(0,10))
         v_scroll = tk.Scrollbar(list_frame, orient="vertical")
         v_scroll.pack(side="right", fill="y")
-        self.listbox = tk.Listbox(list_frame, selectmode="browse", yscrollcommand=v_scroll.set)
-        self.listbox.pack(fill="both", expand=True)
+        self.listbox = tk.Listbox(list_frame, selectmode="browse", yscrollcommand=v_scroll.set, height=5)
+        self.listbox.pack(fill="x", pady=(0,10))
         v_scroll.config(command=self.listbox.yview)
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
@@ -123,14 +123,18 @@ class LernzieleViewer(tk.Tk):
         self.filelist_box.bind('<Double-Button-1>', self.open_selected_file)
         self.filelist_box.bind('<Button-2>', self.show_file_context_menu)  # Right-click on most systems | On Mac, <Button-2> is sometimes used
 
-        self.copy_btn = tk.Button(details, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
-        self.copy_btn.pack(pady=5)
+        # Learning Goal Directory Operations
+        self.btn_row = tk.Frame(details)
+        self.btn_row.pack(anchor="center", pady=5)
 
-        self.mkdir_btn = tk.Button(details, text="Verzeichnis anlegen", command=self.create_goal_directory, state="disabled")
-        self.mkdir_btn.pack(pady=5)
+        self.copy_btn = tk.Button(self.btn_row, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
+        self.copy_btn.pack(side="left", padx=4)
 
-        self.adddoc_btn = tk.Button(details, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
-        self.adddoc_btn.pack(pady=5)
+        self.mkdir_btn = tk.Button(self.btn_row, text="Verzeichnis anlegen", command=self.create_goal_directory, state="disabled")
+        self.mkdir_btn.pack(side="left", padx=4)
+
+        self.adddoc_btn = tk.Button(self.btn_row, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
+        self.adddoc_btn.pack(side="left", padx=4)
 
         # PDF Slicing and copying to lz directory
         pdfslice = tk.LabelFrame(self.scrollable_frame, text="PDF zuschneiden und speichern")
