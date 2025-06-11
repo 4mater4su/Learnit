@@ -27,8 +27,9 @@ class FlashcardEditor(tk.Toplevel):
         self.title(f"Flashcard Editor — {os.path.basename(json_path)}")
 
         # --- Top bar with goal and delete button ---
-        topbar = tk.Frame(self, bg="#181A1B")
-        topbar.pack(fill="x", pady=(8,0))
+        topbar = tk.Frame(self, bg="#181A1B", height=60)
+        topbar.pack(fill="x", pady=(8, 0), padx=0)
+        topbar.pack_propagate(False)  # Prevent shrinking
 
         goal_text = tk.Text(
             topbar,
@@ -39,21 +40,28 @@ class FlashcardEditor(tk.Toplevel):
             font=("SF Pro Display", 18, "bold"),
             bd=0,
             highlightthickness=0,
-            cursor="xterm",         # show text‐edit cursor
-            exportselection=True,    # allow clipboard copy
+            cursor="xterm",
+            exportselection=True,
         )
         goal_text.insert("1.0", f"Lernziel: {learning_goal}")
-        goal_text.configure(state="disabled")  # disable editing, still selectable
-        goal_text.pack(side="left", fill="x", expand=True, padx=10, pady=(10, 5))
+        goal_text.configure(state="disabled")
+        goal_text.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=(10, 5))
 
         del_btn = tk.Button(
             topbar,
-            text="🗑 Batch löschen",
-            bg="#3C2323", fg="white",
-            font=("SF Pro Display", 14, "bold"),
-            command=self._delete_batch
+            text="🗑 Batch",
+            bg="#BC2C2C",
+            fg="white",
+            activebackground="#a02525",
+            activeforeground="white",
+            font=("SF Pro Display", 16, "bold"),
+            command=self._delete_batch,
+            height=2,
+            width=16,
+            takefocus=0  # not focusable
         )
-        del_btn.pack(side="right", padx=10, pady=10)
+        del_btn.pack(side="right", padx=14, pady=8, ipadx=8, ipady=5)
+        goal_text.focus_set()
 
         self.geometry("1100x700")
         self.configure(bg="#181A1B")
@@ -178,6 +186,13 @@ class FlashcardEditor(tk.Toplevel):
                 messagebox.showerror("Fehler", f"JSON-Datei konnte nicht gelöscht werden:\n{e}")
                 return
             messagebox.showinfo("Gelöscht", "Batch und JSON-Datei wurden gelöscht.")
+
+            # If master has a refresh method, call it with the current goal
+            if hasattr(self.master, "refresh_goal_color"):
+                # Get learning_goal string (already loaded earlier)
+                goal = self.batch.get("learning_goal", "")
+                self.master.refresh_goal_color(goal)
+
             self.destroy()
 
 

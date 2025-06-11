@@ -232,6 +232,15 @@ class LernzieleViewer(tk.Tk):
                 return "#81720f"  # yellow
         return "#202324"
 
+    def refresh_goal_color(self, goal):
+        # Find the index of the goal in self.lernziele
+        try:
+            idx = self.lernziele.index(goal)
+        except ValueError:
+            return
+        color = self.get_goal_color(goal)
+        self.listbox.itemconfig(idx, bg=color)
+
     def choose_and_load_file(self):
         path = filedialog.askopenfilename(title="Bitte Excel-Datei auswählen", filetypes=[("Excel Dateien","*.xlsx *.xls")])
         if not path: return
