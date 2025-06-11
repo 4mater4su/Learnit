@@ -77,7 +77,11 @@ class LernzieleViewer(tk.Tk):
             )
         )
 
-        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.scrollable_frame_window = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        def resize_scrollable_frame(event):
+            self.canvas.itemconfig(self.scrollable_frame_window, width=event.width)
+        self.canvas.bind("<Configure>", resize_scrollable_frame)
+
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
@@ -88,7 +92,7 @@ class LernzieleViewer(tk.Tk):
         self.canvas.bind("<Leave>", lambda e: self.canvas.unbind_all("<MouseWheel>"))
 
 
-        self.default_outdir = "flashcards"
+        self.default_outdir = "archive"
         self.lernziele = []
         self.current_text = ""
 
@@ -199,16 +203,20 @@ class LernzieleViewer(tk.Tk):
         self.outdir_entry.grid(row=2,column=1,sticky="we",padx=5)
         tk.Button(gen,text="…",command=self.browse_outdir).grid(row=2,column=2)
 
-        self.gen_btn = tk.Button(gen, text="Generate Flashcards", command=self.generate_flashcards, state="disabled")
-        self.gen_btn.grid(row=3,column=0,columnspan=3,pady=10)
+        # Create the button row frame
+        self.gen_btn_row = tk.Frame(gen)
+        self.gen_btn_row.grid(row=3, column=0, columnspan=3, pady=10)
 
-        self.review_btn = tk.Button(gen, text="Review Flashcards", command=self.review_current, state="disabled")
-        self.review_btn.grid(row=4,column=0,columnspan=3,pady=(0,10))
-        gen.columnconfigure(1, weight=1)
+        # Add buttons horizontally inside this frame
+        self.gen_btn = tk.Button(self.gen_btn_row, text="Generate Flashcards", command=self.generate_flashcards, state="disabled")
+        self.gen_btn.pack(side="left", padx=4)
 
-        self.edit_btn = tk.Button(gen, text="Edit Flashcards",
-        command=self.edit_current, state="disabled")
-        self.edit_btn.grid(row=5, column=0, columnspan=3, pady=(0,10))
+        self.review_btn = tk.Button(self.gen_btn_row, text="Review Flashcards", command=self.review_current, state="disabled")
+        self.review_btn.pack(side="left", padx=4)
+
+        self.edit_btn = tk.Button(self.gen_btn_row, text="Edit Flashcards", command=self.edit_current, state="disabled")
+        self.edit_btn.pack(side="left", padx=4)
+
 
     def choose_and_load_file(self):
         path = filedialog.askopenfilename(title="Bitte Excel-Datei auswählen", filetypes=[("Excel Dateien","*.xlsx *.xls")])
