@@ -26,9 +26,12 @@ class FlashcardEditor(tk.Toplevel):
         learning_goal = self._load_batch(json_path).get("learning_goal", "")
         self.title(f"Flashcard Editor — {os.path.basename(json_path)}")
 
-        # ====== NEW: display the learning goal at the top ======
+        # --- Top bar with goal and delete button ---
+        topbar = tk.Frame(self, bg="#181A1B")
+        topbar.pack(fill="x", pady=(8,0))
+
         goal_text = tk.Text(
-            self,
+            topbar,
             height=3,
             wrap="word",
             bg="#181A1B",
@@ -41,8 +44,16 @@ class FlashcardEditor(tk.Toplevel):
         )
         goal_text.insert("1.0", f"Lernziel: {learning_goal}")
         goal_text.configure(state="disabled")  # disable editing, still selectable
-        goal_text.pack(fill="x", padx=10, pady=(10, 5))
-        # =========================================================
+        goal_text.pack(side="left", fill="x", expand=True, padx=10, pady=(10, 5))
+
+        del_btn = tk.Button(
+            topbar,
+            text="🗑 Batch löschen",
+            bg="#3C2323", fg="white",
+            font=("SF Pro Display", 14, "bold"),
+            command=self._delete_batch
+        )
+        del_btn.pack(side="right", padx=10, pady=10)
 
         self.geometry("1100x700")
         self.configure(bg="#181A1B")
@@ -158,6 +169,17 @@ class FlashcardEditor(tk.Toplevel):
                 self.selected_index = None
                 self.q_text.delete("1.0", "end")
                 self.a_text.delete("1.0", "end")
+
+    def _delete_batch(self):
+        if messagebox.askyesno("Batch löschen", "Wirklich den gesamten Batch und die zugehörige JSON-Datei löschen? Dieser Vorgang kann nicht rückgängig gemacht werden."):
+            try:
+                os.remove(self.json_path)
+            except Exception as e:
+                messagebox.showerror("Fehler", f"JSON-Datei konnte nicht gelöscht werden:\n{e}")
+                return
+            messagebox.showinfo("Gelöscht", "Batch und JSON-Datei wurden gelöscht.")
+            self.destroy()
+
 
     def _save_changes(self):
         # write back currently visible edits if any selection

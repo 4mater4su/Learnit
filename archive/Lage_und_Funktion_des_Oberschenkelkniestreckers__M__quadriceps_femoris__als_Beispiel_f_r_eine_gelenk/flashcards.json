@@ -1,27 +1,27 @@
 {
   "learning_goal": "Lage und Funktion des Oberschenkelkniestreckers (M. quadriceps femoris) als Beispiel für eine gelenksübergreifende Muskelwirkung beschreiben und erläutern können.",
   "page_range": "1-1",
-  "pdf_path": "flashcards/Lage_und_Funktion_des_Oberschenkelkniestreckers__M__quadriceps_femoris__als_Beispiel_f_r_eine_gelenk/extracted_pages.pdf",
+  "pdf_path": "archive/Lage_und_Funktion_des_Oberschenkelkniestreckers__M__quadriceps_femoris__als_Beispiel_f_r_eine_gelenk/extracted_pages.pdf",
   "flashcards": [
     {
-      "question": "Was ist die Hauptfunktion des M. quadriceps femoris?",
-      "answer": "Der M. quadriceps femoris ist hauptsächlich für die Knieextension verantwortlich, wobei der rectus femoris auch die Hüftflexion unterstützt."
+      "question": "Welcher Muskel ist für die Streckung des Kniegelenks verantwortlich und hat eine gemeinsame Ansatzsehne mit drei weiteren Muskeln?",
+      "answer": "Der M. quadriceps femoris, bestehend aus vier Muskelköpfen, ist für die Knieextension verantwortlich und hat eine gemeinsame Ansatzsehne."
     },
     {
-      "question": "Welche Muskelköpfe gehören zum M. quadriceps femoris und wo setzen sie an?",
-      "answer": "Der Muskel besteht aus vier Köpfen: M. rectus femoris (Ansatz an der Tuberositas tibiae), M. vastus medialis, M. vastus intermedius und M. vastus lateralis, die alle an der Tuberositas tibiae ansetzen."
+      "question": "Welche Funktion hat der M. rectus femoris innerhalb des M. quadriceps femoris bei der Bewegungsentwicklung?",
+      "answer": "Der M. rectus femoris führt neben der Knieextension auch die Hüftflexion durch, da er das Hüftgelenk übergreift."
     },
     {
-      "question": "Wie wirkt der M. quadriceps femoris über die Gelenke hinweg?",
-      "answer": "Der M. quadriceps femoris wirkt gelenksübergreifend, da er sowohl die KnieExtension als auch beim rectus femoris die Hüftflexion unterstützt."
+      "question": "Wie wird die gelenksübergreifende Wirkung des M. quadriceps femoris veranschaulicht?",
+      "answer": "Der M. rectus femoris wirkt sowohl auf das Knie- als auch auf das Hüftgelenk, wodurch er die Bewegung von Knie- und Hüftgelenk beeinflusst."
     },
     {
-      "question": "Warum ist der M. rectus femoris eine besondere Ergänzung im M. quadriceps femoris?",
-      "answer": "Der M. rectus femoris ist der einzige Kopf des Quadriceps, der das Hüftgelenk überkreift und somit sowohl die Knie- als auch die Hüftbewegung beeinflusst."
+      "question": "Was unterscheidet den M. vastus medialis vom M. vastus lateralis im Muskelverlauf?",
+      "answer": "Der M. vastus medialis windet sich medial entlang des Femurs, während der M. vastus lateralis sich lateral entlang des Femurs windet."
     },
     {
-      "question": "Wie wird der M. quadriceps femoris innerviert?",
-      "answer": "Alle Köpfe des M. quadriceps femoris werden vom Nervus femoralis (L2-4) innerviert."
+      "question": "Welchen Auftrag hat der M. quadriceps femoris beim Bewegen des Beins?",
+      "answer": "Der M. quadriceps femoris ist vor allem für die Knieextension zuständig und unterstützt die Hüftflexion durch den M. rectus femoris."
     }
   ]
 }

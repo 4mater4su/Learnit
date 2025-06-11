@@ -54,6 +54,7 @@ def create_dark_button(parent, text, command, width=400, height=60, font=('SF Pr
 
     return canvas
 
+
 class LernzieleViewer(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -217,6 +218,19 @@ class LernzieleViewer(tk.Tk):
         self.edit_btn = tk.Button(self.gen_btn_row, text="Edit Flashcards", command=self.edit_current, state="disabled")
         self.edit_btn.pack(side="left", padx=4)
 
+    def get_goal_color(self, goal):
+        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        dirname = sanitize_dirname(goal)
+        goal_dir = os.path.join(outdir, dirname)
+        json_path = os.path.join(goal_dir, "flashcards.json")
+        if os.path.isfile(json_path):
+            return "#316417"  # green
+        elif os.path.isdir(goal_dir):
+            # If directory contains any files (excluding .DS_Store etc.)
+            files = [f for f in os.listdir(goal_dir) if os.path.isfile(os.path.join(goal_dir, f)) and not f.startswith('.')]
+            if files:
+                return "#81720f"  # yellow
+        return "#202324"
 
     def choose_and_load_file(self):
         path = filedialog.askopenfilename(title="Bitte Excel-Datei auswählen", filetypes=[("Excel Dateien","*.xlsx *.xls")])
@@ -229,11 +243,13 @@ class LernzieleViewer(tk.Tk):
             messagebox.showwarning("Spalte fehlt","Keine Spalte 'Lernziel'."); return
         self.lernziele = df["Lernziel"].astype(str).tolist()
         self.listbox.delete(0,tk.END)
-        for i,txt in enumerate(self.lernziele,1):
-            preview = txt[:80].rstrip()+("…" if len(txt)>80 else "")
-            self.listbox.insert(tk.END,f"{i}. {preview}")
-            if self.find_json_for_goal(txt):
-                self.listbox.itemconfig(i-1, bg="#316417")
+        self.listbox.delete(0,tk.END)
+        for i, txt in enumerate(self.lernziele, 1):
+            preview = txt[:80].rstrip() + ("…" if len(txt) > 80 else "")
+            self.listbox.insert(tk.END, f"{i}. {preview}")
+            color = self.get_goal_color(txt)
+            self.listbox.itemconfig(i-1, bg=color)
+
         self.title(f"Lernziele Viewer — {os.path.basename(path)}")
 
         self.copy_btn.config(state="disabled")
@@ -447,8 +463,8 @@ class LernzieleViewer(tk.Tk):
         d=filedialog.askdirectory(title="Outdir auswählen")
         if d: self.outdir_entry.delete(0,'end'); self.outdir_entry.insert(0,d)
         for i,txt in enumerate(self.lernziele):
-            color = "#316417" if self.find_json_for_goal(txt) else "white"
-            self.listbox.itemconfig(i,bg=color)
+            color = self.get_goal_color(txt)
+            self.listbox.itemconfig(i, bg=color)
 
     def update_pdf_list_for_goal(self, goal):
         # Clear old checkboxes
