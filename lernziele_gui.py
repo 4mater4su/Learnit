@@ -29,9 +29,10 @@ class LernzieleViewer(tk.Tk):
         self.title("Lernziele Viewer")
         self.geometry("800x800")
         self.default_outdir = "archive"
+        self.current_outdir = self.default_outdir
         self.lernziele = []
         self.current_text = ""
-
+        
         # --- Create scrollable content area ---
         self.scrollable_frame = self._create_scrollable_area()
         
@@ -49,7 +50,7 @@ class LernzieleViewer(tk.Tk):
         self.goal_file_manager = GoalFileManagerFrame(
             self.scrollable_frame,
             goal_getter=lambda: self.current_text,
-            outdir_getter=lambda: self.outdir_entry.get().strip() or self.default_outdir,
+            outdir_getter=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname
         )
         self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
@@ -58,7 +59,7 @@ class LernzieleViewer(tk.Tk):
         self.pdf_slice_frame = PDFSliceFrame(
             self.scrollable_frame,
             get_current_goal=lambda: self.current_text,
-            get_outdir=lambda: self.outdir_entry.get().strip() or self.default_outdir,
+            get_outdir=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname,
             slice_pdf_func=slice_pdf,
             update_callback=lambda: [self.goal_file_manager.update_filelist(), self.flashcard_manager_frame.update_pdf_list()]
@@ -69,7 +70,7 @@ class LernzieleViewer(tk.Tk):
         self.flashcard_manager_frame = FlashcardManagerFrame(
             self.scrollable_frame,
             get_current_goal=lambda: self.current_text,
-            get_outdir=lambda: self.outdir_entry.get().strip() or self.default_outdir,
+            get_outdir=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname,
             generate_flashcards_from_pdf=generate_flashcards_from_pdf,
             load_flashcard_data=load_flashcard_data,
@@ -124,7 +125,7 @@ class LernzieleViewer(tk.Tk):
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
     def get_goal_color(self, goal):
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        outdir = self.current_outdir
         dirname = sanitize_dirname(goal)
         goal_dir = os.path.join(outdir, dirname)
         json_path = os.path.join(goal_dir, "flashcards.json")
@@ -201,7 +202,7 @@ class LernzieleViewer(tk.Tk):
         self.flashcard_manager_frame.update_pdf_list()
 
     def find_json_for_goal(self, goal):
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
+        outdir = lambda: self.current_outdir
         dirname = sanitize_dirname(goal)
         json_path = os.path.join(outdir, dirname, "flashcards.json")
         if os.path.isfile(json_path):
@@ -209,11 +210,13 @@ class LernzieleViewer(tk.Tk):
         return None      
 
     def browse_outdir(self):
-        d=filedialog.askdirectory(title="Outdir auswählen")
-        if d: self.outdir_entry.delete(0,'end'); self.outdir_entry.insert(0,d)
-        for i,txt in enumerate(self.lernziele):
-            color = self.get_goal_color(txt)
-            self.listbox.itemconfig(i, bg=color)
+        d = filedialog.askdirectory(title="Outdir auswählen")
+        if d:
+            self.current_outdir = d
+            # update any widgets or colors that depend on outdir
+            for i, txt in enumerate(self.lernziele):
+                color = self.get_goal_color(txt)
+                self.listbox.itemconfig(i, bg=color)
 
     def start_review(self, json_path):
         data = load_flashcard_data(json_path)
