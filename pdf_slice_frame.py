@@ -3,13 +3,14 @@ from tkinter import filedialog, messagebox
 import os
 
 class PDFSliceFrame(tk.LabelFrame):
-    def __init__(self, parent, get_current_goal, get_outdir, sanitize_dirname, slice_pdf_func, update_callback, **kwargs):
+    def __init__(self, parent, get_current_goal, get_outdir, sanitize_dirname, slice_pdf_func, update_callback, refresh_all_goal_colors, **kwargs):
         super().__init__(parent, text="PDF zuschneiden und speichern", **kwargs)
         self.get_current_goal = get_current_goal
         self.get_outdir = get_outdir
         self.sanitize_dirname = sanitize_dirname
         self.slice_pdf_func = slice_pdf_func
         self.update_callback = update_callback  # To refresh file lists after slicing
+        self.refresh_all_goal_colors = refresh_all_goal_colors
 
         tk.Label(self, text="PDF:").grid(row=0, column=0, sticky="e")
         self.slice_pdf_entry = tk.Entry(self)
@@ -64,6 +65,8 @@ class PDFSliceFrame(tk.LabelFrame):
             messagebox.showinfo("Erfolg", f"PDF gespeichert: {out_pdf}")
             if self.update_callback:
                 self.update_callback()
+            if self.refresh_all_goal_colors:
+                self.refresh_all_goal_colors()
         except Exception as e:
             messagebox.showerror("Fehler", f"PDF konnte nicht gespeichert werden:\n{e}")
 

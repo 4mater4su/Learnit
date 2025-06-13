@@ -63,7 +63,8 @@ class LernzieleViewer(tk.Tk):
             get_outdir=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname,
             slice_pdf_func=slice_pdf,
-            update_callback=lambda: [self.goal_file_manager.update_filelist(), self.flashcard_manager_frame.update_pdf_list()]
+            update_callback=lambda: [self.goal_file_manager.update_filelist(), self.flashcard_manager_frame.update_pdf_list()],
+            refresh_all_goal_colors=self.refresh_all_goal_colors
         )
         self.pdf_slice_frame.pack(fill="x", padx=10, pady=(0, 10))
 
