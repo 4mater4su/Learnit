@@ -19,6 +19,7 @@ from flashcard_manager import (
     slice_pdf
 )
 from goal_file_manager import GoalFileManagerFrame
+from pdf_slice_frame import PDFSliceFrame
 
 def sanitize_dirname(name):
     # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
@@ -125,24 +126,15 @@ class LernzieleViewer(tk.Tk):
         )
         self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
         
-        # PDF Slicing and copying to lz directory
-        pdfslice = tk.LabelFrame(self.scrollable_frame, text="PDF zuschneiden und speichern")
-        pdfslice.pack(fill="x", padx=10, pady=(0,10))
-
-        tk.Label(pdfslice, text="PDF:").grid(row=0, column=0, sticky="e")
-        self.slice_pdf_entry = tk.Entry(pdfslice)
-        self.slice_pdf_entry.grid(row=0, column=1, sticky="we", padx=5)
-        tk.Button(pdfslice, text="…", command=self.browse_slice_pdf).grid(row=0, column=2)
-
-        tk.Label(pdfslice, text="Seiten:").grid(row=1, column=0, sticky="e")
-        self.slice_start_spin = tk.Spinbox(pdfslice, from_=1, to=9999, width=5)
-        self.slice_start_spin.grid(row=1, column=1, sticky="w")
-        self.slice_end_spin = tk.Spinbox(pdfslice, from_=1, to=9999, width=5)
-        self.slice_end_spin.grid(row=1, column=2, sticky="w")
-
-        self.slice_btn = tk.Button(pdfslice, text="PDF ausschneiden & speichern", command=self.slice_and_save_pdf, state="disabled")
-        self.slice_btn.grid(row=2, column=0, columnspan=3, pady=8)
-        pdfslice.columnconfigure(1, weight=1)
+        self.pdf_slice_frame = PDFSliceFrame(
+            self.scrollable_frame,
+            get_current_goal=lambda: self.current_text,
+            get_outdir=lambda: self.outdir_entry.get().strip() or self.default_outdir,
+            sanitize_dirname=sanitize_dirname,
+            slice_pdf_func=slice_pdf,
+            update_callback=lambda: [self.goal_file_manager.update_filelist(), self.update_pdf_list_for_goal(self.current_text)]
+        )
+        self.pdf_slice_frame.pack(fill="x", padx=10, pady=(0,10))
 
         # Checkboxes for selecting the PDFs used for generating flashcards
         self.pdf_checkboxes = {}   # filename → tk.BooleanVar
@@ -248,7 +240,7 @@ class LernzieleViewer(tk.Tk):
 
         self.gen_btn.config(state="disabled")
         self.review_btn.config(state="disabled")
-        self.slice_btn.config(state="disabled")
+        self.pdf_slice_frame.set_slice_button_state("disabled")
 
         self.goal_file_manager.copy_btn.config(state="disabled")
         self.goal_file_manager.mkdir_btn.config(state="disabled")
@@ -264,8 +256,7 @@ class LernzieleViewer(tk.Tk):
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.insert("end",text); self.details_text.config(state="disabled")
 
         self.gen_btn.config(state="normal")
-        self.slice_btn.config(state="normal")
-        # TODO: What about the review button???
+        self.pdf_slice_frame.set_slice_button_state("normal")
 
         self.goal_file_manager.copy_btn.config(state="normal")
         self.goal_file_manager.mkdir_btn.config(state="normal")
@@ -289,51 +280,6 @@ class LernzieleViewer(tk.Tk):
         if os.path.isfile(json_path):
             return json_path
         return None      
-
-    def browse_slice_pdf(self):
-        p = filedialog.askopenfilename(title="PDF auswählen", filetypes=[("PDF", "*.pdf")])
-        if p:
-            self.slice_pdf_entry.delete(0, 'end')
-            self.slice_pdf_entry.insert(0, p)
-
-    def slice_and_save_pdf(self):
-        if not self.current_text:
-            messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
-            return
-        in_pdf = self.slice_pdf_entry.get().strip()
-        try:
-            start = int(self.slice_start_spin.get())
-            end = int(self.slice_end_spin.get())
-        except:
-            messagebox.showerror("Fehler", "Ungültige Seitenzahl.")
-            return
-        if not os.path.isfile(in_pdf):
-            messagebox.showerror("Fehler", "PDF-Datei nicht gefunden.")
-            return
-        if end < start or start < 1:
-            messagebox.showerror("Fehler", "Ungültiger Seitenbereich.")
-            return
-
-        dirname = sanitize_dirname(self.current_text)
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
-        target_dir = os.path.join(outdir, dirname)
-        if not os.path.isdir(target_dir):
-            messagebox.showerror("Fehler", "Verzeichnis für Lernziel nicht vorhanden. Bitte zuerst anlegen.")
-            return
-        # Output filename: original name + range
-        base = os.path.splitext(os.path.basename(in_pdf))[0]
-        out_pdf = os.path.join(target_dir, f"{base}_S{start}-{end}.pdf")
-        try:
-            slice_pdf(in_pdf, out_pdf, start, end)  # <---- Corrected call
-            messagebox.showinfo("Erfolg", f"PDF gespeichert: {out_pdf}")
-            self.goal_file_manager.update_filelist()
-            self.update_pdf_list_for_goal(self.current_text)
-        except Exception as e:
-            messagebox.showerror("Fehler", f"PDF konnte nicht gespeichert werden:\n{e}")
-
-    def browse_pdf(self):
-        p=filedialog.askopenfilename(title="PDF auswählen",filetypes=[("PDF","*.pdf")])
-        if p: self.pdf_entry.delete(0,'end'); self.pdf_entry.insert(0,p)
 
     def browse_outdir(self):
         d=filedialog.askdirectory(title="Outdir auswählen")
