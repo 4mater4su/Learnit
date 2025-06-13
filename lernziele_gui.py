@@ -173,6 +173,9 @@ class LernzieleViewer(tk.Tk):
 
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.config(state="disabled")
 
+        self.flashcard_manager_frame.update_outdir_entry_for_goal()
+
+
     def on_select(self, event):
         sel = self.listbox.curselection()
         if not sel:
@@ -196,6 +199,8 @@ class LernzieleViewer(tk.Tk):
         self.goal_file_manager.copy_btn.config(state="normal")
         self.goal_file_manager.mkdir_btn.config(state="normal")
         self.goal_file_manager.adddoc_btn.config(state="normal")
+
+        self.flashcard_manager_frame.update_outdir_entry_for_goal()
 
         self.goal_file_manager.update_filelist()
         self.flashcard_manager_frame.update_pdf_list()

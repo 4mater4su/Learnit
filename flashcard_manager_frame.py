@@ -99,6 +99,19 @@ class FlashcardManagerFrame(tk.LabelFrame):
 
     def get_outdir_value(self):
         return self.outdir_entry.get().strip()
+    
+    def update_outdir_entry_for_goal(self):
+        """Set the outdir entry to the current goal's folder."""
+        outdir = self.get_outdir()
+        goal = self.get_current_goal()
+        if not goal:
+            self.outdir_entry.delete(0, 'end')
+            self.outdir_entry.insert(0, outdir)
+            return
+        dirname = self.sanitize_dirname(goal)
+        goal_dir = os.path.join(outdir, dirname)
+        self.outdir_entry.delete(0, 'end')
+        self.outdir_entry.insert(0, goal_dir)
 
     def set_action_buttons_state(self, state):
         self.gen_btn.config(state=state)
