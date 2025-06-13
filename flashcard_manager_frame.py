@@ -10,6 +10,7 @@ class FlashcardManagerFrame(tk.LabelFrame):
                  load_flashcard_data,
                  open_review_window,
                  open_editor_window,
+                 refresh_all_goal_colors,
                  **kwargs):
         super().__init__(parent, text="Flashcards generieren", **kwargs)
         self.get_current_goal = get_current_goal
@@ -19,6 +20,7 @@ class FlashcardManagerFrame(tk.LabelFrame):
         self.load_flashcard_data = load_flashcard_data
         self.open_review_window = open_review_window
         self.open_editor_window = open_editor_window
+        self.refresh_all_goal_colors = refresh_all_goal_colors
 
         # Outdir
         tk.Label(self, text="Outdir:").grid(row=2,column=0,sticky="e")
@@ -147,6 +149,7 @@ class FlashcardManagerFrame(tk.LabelFrame):
                 f"Flashcards für {len(created)} PDF(s) erstellt:\n" + "\n".join(created)
             )
             self.review_btn.config(state="normal")
+            self.refresh_all_goal_colors()
         if errors:
             messagebox.showerror(
                 "Fehler",

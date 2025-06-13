@@ -51,7 +51,8 @@ class LernzieleViewer(tk.Tk):
             self.scrollable_frame,
             goal_getter=lambda: self.current_text,
             outdir_getter=lambda: self.current_outdir,
-            sanitize_dirname=sanitize_dirname
+            sanitize_dirname=sanitize_dirname,
+            refresh_all_goal_colors=self.refresh_all_goal_colors
         )
         self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
 
@@ -75,7 +76,8 @@ class LernzieleViewer(tk.Tk):
             generate_flashcards_from_pdf=generate_flashcards_from_pdf,
             load_flashcard_data=load_flashcard_data,
             open_review_window=self.start_review,
-            open_editor_window=self.edit_current  # or an editor function
+            open_editor_window=self.edit_current,
+            refresh_all_goal_colors=self.refresh_all_goal_colors
         )
         self.flashcard_manager_frame.pack(fill="x", padx=10, pady=(0, 10))
 
@@ -138,14 +140,10 @@ class LernzieleViewer(tk.Tk):
                 return "#81720f"  # yellow
         return "#202324"
 
-    def refresh_goal_color(self, goal):
-        # Find the index of the goal in self.lernziele
-        try:
-            idx = self.lernziele.index(goal)
-        except ValueError:
-            return
-        color = self.get_goal_color(goal)
-        self.listbox.itemconfig(idx, bg=color)
+    def refresh_all_goal_colors(self):
+        for i, txt in enumerate(self.lernziele):
+            color = self.get_goal_color(txt)
+            self.listbox.itemconfig(i, bg=color)
 
     def choose_and_load_file(self):
         path = filedialog.askopenfilename(title="Bitte Excel-Datei auswählen", filetypes=[("Excel Dateien","*.xlsx *.xls")])

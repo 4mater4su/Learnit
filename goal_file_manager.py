@@ -5,7 +5,7 @@ import shutil
 import sys
 
 class GoalFileManagerFrame(tk.LabelFrame):
-    def __init__(self, parent, goal_getter, outdir_getter, sanitize_dirname, **kwargs):
+    def __init__(self, parent, goal_getter, outdir_getter, sanitize_dirname, refresh_all_goal_colors, **kwargs):
         super().__init__(parent, text="Ausgewähltes Lernziel", **kwargs)
         self.goal_getter = goal_getter            # Function to get current goal text
         self.outdir_getter = outdir_getter        # Function to get output directory
@@ -28,6 +28,8 @@ class GoalFileManagerFrame(tk.LabelFrame):
         self.mkdir_btn.pack(side="left", padx=4)
         self.adddoc_btn = tk.Button(btn_row, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
         self.adddoc_btn.pack(side="left", padx=4)
+
+        self.refresh_all_goal_colors = refresh_all_goal_colors
 
     # The following methods use goal_getter() and outdir_getter()
     def update_filelist(self):
@@ -68,6 +70,7 @@ class GoalFileManagerFrame(tk.LabelFrame):
             os.makedirs(full_path, exist_ok=False)
             messagebox.showinfo("Erfolg", f"Verzeichnis erstellt: {full_path}")
             self.update_filelist()
+            self.refresh_all_goal_colors()
         except FileExistsError:
             messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
         except Exception as e:
@@ -97,6 +100,7 @@ class GoalFileManagerFrame(tk.LabelFrame):
         if not errors:
             messagebox.showinfo("Erfolg", "Dokument(e) hinzugefügt.")
             self.update_filelist()
+            self.refresh_all_goal_colors()
         else:
             messagebox.showerror("Fehler beim Kopieren", "\n".join(errors))
 
@@ -137,6 +141,7 @@ class GoalFileManagerFrame(tk.LabelFrame):
             try:
                 os.remove(filepath)
                 self.update_filelist()
+                self.refresh_all_goal_colors()
             except Exception as e:
                 messagebox.showerror("Fehler", f"Datei konnte nicht gelöscht werden:\n{e}")
 
