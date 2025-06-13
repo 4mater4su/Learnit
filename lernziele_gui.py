@@ -18,6 +18,7 @@ from flashcard_manager import (
     update_progress,
     slice_pdf
 )
+from goal_file_manager import GoalFileManagerFrame
 
 def sanitize_dirname(name):
     # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
@@ -112,35 +113,18 @@ class LernzieleViewer(tk.Tk):
         v_scroll.config(command=self.listbox.yview)
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
-        # Detail & Make Directory
-        details = tk.LabelFrame(self.scrollable_frame, text="Ausgewähltes Lernziel")
-        details.pack(fill="x", padx=10, pady=(0,10))
-        self.details_text = tk.Text(details, height=4, wrap="word", state="disabled")
-        self.details_text.pack(fill="both", expand=True)
+        # Goal file manager
+        self.details_text = tk.Text(self.scrollable_frame, height=4, wrap="word", state="disabled")
+        self.details_text.pack(fill="x", padx=10, pady=(0, 10))
 
-        # File list label
-        self.filelist_label = tk.Label(details, text="Dateien im Verzeichnis:", anchor="w")
-        self.filelist_label.pack(fill="x", padx=4, pady=(2,0))
-
-        # File listbox
-        self.filelist_box = tk.Listbox(details, height=4, activestyle='dotbox')
-        self.filelist_box.pack(fill="both", expand=False, padx=4, pady=(0,4))
-        self.filelist_box.bind('<Double-Button-1>', self.open_selected_file)
-        self.filelist_box.bind('<Button-2>', self.show_file_context_menu)  # Right-click on most systems | On Mac, <Button-2> is sometimes used
-
-        # Learning Goal Directory Operations
-        self.btn_row = tk.Frame(details)
-        self.btn_row.pack(anchor="center", pady=5)
-
-        self.copy_btn = tk.Button(self.btn_row, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
-        self.copy_btn.pack(side="left", padx=4)
-
-        self.mkdir_btn = tk.Button(self.btn_row, text="Verzeichnis anlegen", command=self.create_goal_directory, state="disabled")
-        self.mkdir_btn.pack(side="left", padx=4)
-
-        self.adddoc_btn = tk.Button(self.btn_row, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
-        self.adddoc_btn.pack(side="left", padx=4)
-
+        self.goal_file_manager = GoalFileManagerFrame(
+            self.scrollable_frame,
+            goal_getter=lambda: self.current_text,
+            outdir_getter=lambda: self.outdir_entry.get().strip() or self.default_outdir,
+            sanitize_dirname=sanitize_dirname
+        )
+        self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
+        
         # PDF Slicing and copying to lz directory
         pdfslice = tk.LabelFrame(self.scrollable_frame, text="PDF zuschneiden und speichern")
         pdfslice.pack(fill="x", padx=10, pady=(0,10))
@@ -261,12 +245,15 @@ class LernzieleViewer(tk.Tk):
 
         self.title(f"Lernziele Viewer — {os.path.basename(path)}")
 
-        self.copy_btn.config(state="disabled")
+
         self.gen_btn.config(state="disabled")
         self.review_btn.config(state="disabled")
-        self.mkdir_btn.config(state="disabled")
-        self.adddoc_btn.config(state="disabled")
         self.slice_btn.config(state="disabled")
+
+        self.goal_file_manager.copy_btn.config(state="disabled")
+        self.goal_file_manager.mkdir_btn.config(state="disabled")
+        self.goal_file_manager.adddoc_btn.config(state="disabled")
+
 
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.config(state="disabled")
 
@@ -276,11 +263,14 @@ class LernzieleViewer(tk.Tk):
         idx=sel[0]; text=self.lernziele[idx]; self.current_text=text
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.insert("end",text); self.details_text.config(state="disabled")
 
-        self.copy_btn.config(state="normal")
         self.gen_btn.config(state="normal")
-        self.mkdir_btn.config(state="normal")
-        self.adddoc_btn.config(state="normal")
         self.slice_btn.config(state="normal")
+        # TODO: What about the review button???
+
+        self.goal_file_manager.copy_btn.config(state="normal")
+        self.goal_file_manager.mkdir_btn.config(state="normal")
+        self.goal_file_manager.adddoc_btn.config(state="normal")
+
 
         if self.find_json_for_goal(text):
             self.review_btn.config(state="normal")
@@ -289,7 +279,7 @@ class LernzieleViewer(tk.Tk):
             self.review_btn.config(state="disabled")
             self.edit_btn.config(state="disabled")
 
-        self.update_filelist_for_goal(self.current_text)
+        self.goal_file_manager.update_filelist()
         self.update_pdf_list_for_goal(self.current_text)
 
     def find_json_for_goal(self, goal):
@@ -298,114 +288,7 @@ class LernzieleViewer(tk.Tk):
         json_path = os.path.join(outdir, dirname, "flashcards.json")
         if os.path.isfile(json_path):
             return json_path
-        return None
-
-    def copy_to_clipboard(self):
-        self.clipboard_clear(); self.clipboard_append(self.current_text)
-        messagebox.showinfo("Kopiert","Lernziel kopiert.")
-
-    def create_goal_directory(self):
-        if not self.current_text:
-            messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
-            return
-        dirname = sanitize_dirname(self.current_text)
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
-        full_path = os.path.join(outdir, dirname)
-        try:
-            os.makedirs(full_path, exist_ok=False)
-            messagebox.showinfo("Erfolg", f"Verzeichnis erstellt: {full_path}")
-            self.update_filelist_for_goal(self.current_text)
-            self.update_pdf_list_for_goal(self.current_text)
-        except FileExistsError:
-            messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
-        except Exception as e:
-            messagebox.showerror("Fehler", f"Verzeichnis konnte nicht erstellt werden:\n{e}")
-        
-
-    def add_document_to_goal(self):
-        if not self.current_text:
-            messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
-            return
-        dirname = sanitize_dirname(self.current_text)
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
-        target_dir = os.path.join(outdir, dirname)
-        if not os.path.isdir(target_dir):
-            messagebox.showerror("Fehler", "Das Verzeichnis existiert nicht. Bitte zuerst anlegen.")
-            return
-        files = filedialog.askopenfilenames(title="Dokument(e) auswählen")
-        if not files:
-            return
-        errors = []
-        for f in files:
-            try:
-                # Keep filename only
-                dest = os.path.join(target_dir, os.path.basename(f))
-                shutil.copy2(f, dest)
-            except Exception as e:
-                errors.append(f"{f}: {e}")
-        if not errors:
-            messagebox.showinfo("Erfolg", "Dokument(e) hinzugefügt.")
-            self.update_filelist_for_goal(self.current_text)
-            self.update_pdf_list_for_goal(self.current_text)
-        else:
-            messagebox.showerror("Fehler beim Kopieren", "\n".join(errors))
-        
-
-    def update_filelist_for_goal(self, goal):
-        self.filelist_box.delete(0, tk.END)
-        dirname = sanitize_dirname(goal)
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
-        dirpath = os.path.join(outdir, dirname)
-        if not os.path.isdir(dirpath):
-            self.filelist_box.insert(tk.END, "(Kein Verzeichnis angelegt)")
-            return
-        files = sorted([f for f in os.listdir(dirpath) if os.path.isfile(os.path.join(dirpath, f))])
-        if not files:
-            self.filelist_box.insert(tk.END, "(Keine Dateien vorhanden)")
-        else:
-            for f in files:
-                self.filelist_box.insert(tk.END, f)
-
-    def open_selected_file(self, event=None):
-        sel = self.filelist_box.curselection()
-        if not sel:
-            return
-        filename = self.filelist_box.get(sel[0])
-        if filename.startswith('('):  # Not a real file
-            return
-        dirname = sanitize_dirname(self.current_text)
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
-        filepath = os.path.join(outdir, dirname, filename)
-        try:
-            if sys.platform.startswith('darwin'):
-                subprocess.call(('open', filepath))
-            elif sys.platform.startswith('win'):
-                os.startfile(filepath)
-            else:
-                subprocess.call(('xdg-open', filepath))
-            self.update_filelist_for_goal(self.current_text)
-            self.update_pdf_list_for_goal(self.current_text)
-        except Exception as e:
-            messagebox.showerror("Fehler", f"Datei konnte nicht geöffnet werden:\n{e}")
-
-    def remove_selected_file(self, event=None):
-        sel = self.filelist_box.curselection()
-        if not sel:
-            return
-        filename = self.filelist_box.get(sel[0])
-        if filename.startswith('('):  # Not a real file
-            return
-        dirname = sanitize_dirname(self.current_text)
-        outdir = self.outdir_entry.get().strip() or self.default_outdir
-        filepath = os.path.join(outdir, dirname, filename)
-        answer = messagebox.askyesno("Datei löschen", f"Möchten Sie die Datei wirklich löschen?\n\n{filename}")
-        if answer:
-            try:
-                os.remove(filepath)
-                self.update_filelist_for_goal(self.current_text)
-                self.update_pdf_list_for_goal(self.current_text)
-            except Exception as e:
-                messagebox.showerror("Fehler", f"Datei konnte nicht gelöscht werden:\n{e}")
+        return None      
 
     def browse_slice_pdf(self):
         p = filedialog.askopenfilename(title="PDF auswählen", filetypes=[("PDF", "*.pdf")])
@@ -443,26 +326,10 @@ class LernzieleViewer(tk.Tk):
         try:
             slice_pdf(in_pdf, out_pdf, start, end)  # <---- Corrected call
             messagebox.showinfo("Erfolg", f"PDF gespeichert: {out_pdf}")
-            self.update_filelist_for_goal(self.current_text)
+            self.goal_file_manager.update_filelist()
             self.update_pdf_list_for_goal(self.current_text)
         except Exception as e:
             messagebox.showerror("Fehler", f"PDF konnte nicht gespeichert werden:\n{e}")
-
-    def show_file_context_menu(self, event):
-        sel = self.filelist_box.nearest(event.y)
-        if sel < 0:
-            return
-        self.filelist_box.selection_clear(0, tk.END)
-        self.filelist_box.selection_set(sel)
-        filename = self.filelist_box.get(sel)
-        if filename.startswith('('):
-            return
-        menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label="Datei löschen", command=self.remove_selected_file)
-        try:
-            menu.tk_popup(event.x_root, event.y_root)
-        finally:
-            menu.grab_release()
 
     def browse_pdf(self):
         p=filedialog.askopenfilename(title="PDF auswählen",filetypes=[("PDF","*.pdf")])
