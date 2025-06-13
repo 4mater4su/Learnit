@@ -182,3 +182,5 @@ class FlashcardManagerFrame(tk.LabelFrame):
             messagebox.showerror("Fehler", "Keine Flashcards vorhanden.")
             return
         self.open_editor_window(path)
+        self.refresh_all_goal_colors()
+

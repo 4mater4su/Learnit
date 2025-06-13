@@ -224,8 +224,8 @@ class LernzieleViewer(tk.Tk):
             update_progress_callback=update_progress
         )
 
-    def edit_current(self, json_path):
-        FlashcardEditor(self, json_path)
+    def edit_current(self, json_path, ):
+        FlashcardEditor(self, json_path, refresh_all_goal_colors=self.refresh_all_goal_colors)
 
 if __name__=='__main__':
     app=LernzieleViewer(); app.mainloop()

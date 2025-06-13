@@ -19,12 +19,14 @@ except Exception:  # pragma: no cover – standalone fallback
 class FlashcardEditor(tk.Toplevel):
     """A Tk window that lets the user view, edit and AI‑refine a flashcard batch."""
 
-    def __init__(self, master: tk.Misc | None, json_path: str) -> None:
+    def __init__(self, master: tk.Misc | None, json_path: str, refresh_all_goal_colors=None) -> None:
         super().__init__(master)
         
         # show batch filename and learning goal in the title
         learning_goal = self._load_batch(json_path).get("learning_goal", "")
         self.title(f"Flashcard Editor — {os.path.basename(json_path)}")
+
+        self.refresh_all_goal_colors = refresh_all_goal_colors
 
         # --- Top bar with goal and delete button ---
         topbar = tk.Frame(self, bg="#181A1B", height=60)
@@ -183,9 +185,8 @@ class FlashcardEditor(tk.Toplevel):
                 self.q_text.delete("1.0", "end")
                 self.a_text.delete("1.0", "end")
 
-
     def _delete_batch(self):
-        if messagebox.askyesno("Batch löschen", "Wirklich den gesamten Batch und die zugehörige JSON-Datei löschen? Dieser Vorgang kann nicht rückgängig gemacht werden."):
+        if messagebox.askyesno("Batch löschen", "..."):
             try:
                 os.remove(self.json_path)
             except Exception as e:
@@ -193,11 +194,12 @@ class FlashcardEditor(tk.Toplevel):
                 return
             messagebox.showinfo("Gelöscht", "Batch und JSON-Datei wurden gelöscht.")
 
-            # If master has a refresh method, call it with the current goal
-            if hasattr(self.master, "refresh_goal_color"):
-                # Get learning_goal string (already loaded earlier)
-                goal = self.batch.get("learning_goal", "")
-                self.master.refresh_goal_color(goal)
+            # Always define goal here!
+            goal = self.batch.get("learning_goal", "")
+
+            # Call the color refresh if it was passed
+            if self.refresh_all_goal_colors:
+                self.refresh_all_goal_colors()
 
             batch_key = f"{goal} (Seiten {self.batch.get('page_range','')})"
             remove_batch_progress(batch_key)
