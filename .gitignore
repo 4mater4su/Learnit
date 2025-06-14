@@ -14,5 +14,5 @@ venv/
 progress.json
 
 # Files
-answers/
 PDFs/
+archive/
