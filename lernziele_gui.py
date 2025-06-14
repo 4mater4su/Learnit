@@ -7,16 +7,16 @@ import re
 
 from excel_parser import load_data
 from flashcard_core import (
-    generate_flashcards_from_pdf,
     load_flashcard_data,
     update_progress,
-    slice_pdf
 )
 from flashcard_manager_frame import FlashcardManagerFrame
 from goal_file_manager import GoalFileManagerFrame
 from pdf_slice_frame import PDFSliceFrame
 from flashcard_review_window import FlashcardReviewWindow
 from flashcard_editor import FlashcardEditor
+from flashcard_generation import slice_pdf
+
 
 def sanitize_dirname(name):
     # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
@@ -62,8 +62,8 @@ class LernzieleViewer(tk.Tk):
             get_current_goal=lambda: self.current_text,
             get_outdir=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname,
-            slice_pdf_func=slice_pdf,
             update_callback=lambda: [self.goal_file_manager.update_filelist(), self.flashcard_manager_frame.update_pdf_list()],
+            slice_pdf_func=slice_pdf, 
             refresh_all_goal_colors=self.refresh_all_goal_colors
         )
         self.pdf_slice_frame.pack(fill="x", padx=10, pady=(0, 10))
@@ -74,7 +74,6 @@ class LernzieleViewer(tk.Tk):
             get_current_goal=lambda: self.current_text,
             get_outdir=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname,
-            generate_flashcards_from_pdf=generate_flashcards_from_pdf,
             load_flashcard_data=load_flashcard_data,
             open_review_window=self.start_review,
             open_editor_window=self.edit_current,

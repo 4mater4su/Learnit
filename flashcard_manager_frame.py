@@ -3,10 +3,19 @@ from tkinter import messagebox, filedialog
 import os
 from PyPDF2 import PdfReader
 
+from flashcard_generation import (
+    ChainedFlashcardGenerator,
+    OneShotFlashcardGenerator,
+    FlashcardGenerator
+)
+# Choose the backend
+FLASHCARD_GENERATOR: FlashcardGenerator = ChainedFlashcardGenerator()
+# FLASHCARD_GENERATOR: FlashcardGenerator = OneShotFlashcardGenerator()  # switch if desired
+
+
 class FlashcardManagerFrame(tk.LabelFrame):
     def __init__(self, parent,
                  get_current_goal, get_outdir, sanitize_dirname,
-                 generate_flashcards_from_pdf,
                  load_flashcard_data,
                  open_review_window,
                  open_editor_window,
@@ -16,7 +25,6 @@ class FlashcardManagerFrame(tk.LabelFrame):
         self.get_current_goal = get_current_goal
         self.get_outdir = get_outdir
         self.sanitize_dirname = sanitize_dirname
-        self.generate_flashcards_from_pdf = generate_flashcards_from_pdf
         self.load_flashcard_data = load_flashcard_data
         self.open_review_window = open_review_window
         self.open_editor_window = open_editor_window
@@ -146,12 +154,23 @@ class FlashcardManagerFrame(tk.LabelFrame):
                     errors.append(f"{pdf_filename}: Batch existiert.")
                     continue
 
-                self.generate_flashcards_from_pdf(
+                # ----------- NEW: use pluggable generator backend -----------
+                flashcards = FLASHCARD_GENERATOR.generate_flashcards(
                     pdf_path=pdf_path,
                     page_range=page_range,
-                    learning_goal=goal,
-                    output_json_path=out_json
+                    learning_goal=goal
                 )
+                import json
+                with open(out_json, "w", encoding="utf-8") as f:
+                    batch = {
+                        "learning_goal": goal,
+                        "page_range": f"{page_range[0]}-{page_range[1]}",
+                        "pdf_path": pdf_path,
+                        "flashcards": [fc.dict() for fc in flashcards]
+                    }
+                    json.dump(batch, f, indent=2, ensure_ascii=False)
+                # ----------------------------------------------------------
+
                 created.append(pdf_filename)
             except Exception as e:
                 errors.append(f"{pdf_filename}: {e}")
