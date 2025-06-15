@@ -55,14 +55,13 @@ class PDFSliceFrame(tk.LabelFrame):
         dirname = self.sanitize_dirname(goal)
         outdir = self.get_outdir()
         target_dir = os.path.join(outdir, dirname)
-        if not os.path.isdir(target_dir):
-            messagebox.showerror("Fehler", "Verzeichnis für Lernziel nicht vorhanden. Bitte zuerst anlegen.")
-            return
+        # ensure the goal directory always exists
+        os.makedirs(target_dir, exist_ok=True)
+
         base = os.path.splitext(os.path.basename(in_pdf))[0]
         out_pdf = os.path.join(target_dir, f"{base}_S{start}-{end}.pdf")
         try:
             self.slice_pdf_func(in_pdf, out_pdf, start, end)
-            messagebox.showinfo("Erfolg", f"PDF gespeichert: {out_pdf}")
             if self.update_callback:
                 self.update_callback()
             if self.refresh_all_goal_colors:

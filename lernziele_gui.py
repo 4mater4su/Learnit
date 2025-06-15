@@ -146,7 +146,8 @@ class LernzieleViewer(tk.Tk):
             self.listbox.itemconfig(i, bg=color)
 
     def choose_and_load_file(self):
-        path = filedialog.askopenfilename(title="Bitte Excel-Datei auswählen", filetypes=[("Excel Dateien","*.xlsx *.xls")])
+        #path = filedialog.askopenfilename(title="Bitte Excel-Datei auswählen", filetypes=[("Excel Dateien","*.xlsx *.xls")])
+        path = "/Users/robing/Desktop/projects/Learnit/lernziele/M10-LZ.xlsx"
         if not path: return
         try:
             df = load_data(path)
@@ -167,7 +168,6 @@ class LernzieleViewer(tk.Tk):
         self.flashcard_manager_frame.set_action_buttons_state("disabled")
         self.pdf_slice_frame.set_slice_button_state("disabled")
         self.goal_file_manager.copy_btn.config(state="disabled")
-        self.goal_file_manager.mkdir_btn.config(state="disabled")
         self.goal_file_manager.adddoc_btn.config(state="disabled")
 
         self.details_text.config(state="normal"); self.details_text.delete("1.0","end"); self.details_text.config(state="disabled")
@@ -180,9 +180,7 @@ class LernzieleViewer(tk.Tk):
         if not sel:
             self.flashcard_manager_frame.set_action_buttons_state("disabled")
             self.pdf_slice_frame.set_slice_button_state("disabled")
-            self.goal_file_manager.copy_btn.config(state="disabled")
-            self.goal_file_manager.mkdir_btn.config(state="disabled")
-            self.goal_file_manager.adddoc_btn.config(state="disabled")
+            self.goal_file_manager.update_filelist()
             return
         idx = sel[0]
         text = self.lernziele[idx]
@@ -195,9 +193,8 @@ class LernzieleViewer(tk.Tk):
 
         self.flashcard_manager_frame.set_action_buttons_state("normal")
         self.pdf_slice_frame.set_slice_button_state("normal")
-        self.goal_file_manager.copy_btn.config(state="normal")
-        self.goal_file_manager.mkdir_btn.config(state="normal")
-        self.goal_file_manager.adddoc_btn.config(state="normal")
+        # Let the GoalFileManager decide what to enable/disable
+        self.goal_file_manager.update_filelist()
 
         self.flashcard_manager_frame.update_outdir_entry_for_goal()
 

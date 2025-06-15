@@ -2,200 +2,312 @@
 """
 flashcard_generation.py
 
-Pluggable flashcard generation backends for PDF-to-flashcard pipelines.
+Pluggable flash-card generation back-ends for PDF **and plain-text** pipelines.
+
+Key additions
+-------------
+* **generate_flashcards_from_text(...)** is now part of the public interface.
+* Both One-Shot and Chained generators implement it.
+* Everything uses the new OpenAI Python SDK (v1) `responses.*` endpoints.
 """
 
+from __future__ import annotations
+
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Protocol
 from abc import ABC, abstractmethod
 
 from openai import OpenAI
 from PyPDF2 import PdfReader, PdfWriter
 from pydantic import BaseModel
 
-# ---------- Config ----------
-CLIENT = OpenAI()
+# --------------------------------------------------------------------------- #
+#  Configuration / globals
+# --------------------------------------------------------------------------- #
+CLIENT = OpenAI()          # assumes `OPENAI_API_KEY` env var is present
 TEMP_DIR = "temp"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-# ---------- Flashcard Schema ----------
+# --------------------------------------------------------------------------- #
+#  Core data models
+# --------------------------------------------------------------------------- #
 class Flashcard(BaseModel):
     question: str
     answer: str
 
+
 class FlashcardBatch(BaseModel):
     flashcards: List[Flashcard]
 
-# ---------- Interface ----------
-class FlashcardGenerator(ABC):
+
+# --------------------------------------------------------------------------- #
+#  Generator interface
+# --------------------------------------------------------------------------- #
+class FlashcardGenerator(Protocol):
+    """
+    Abstract interface – supports BOTH PDF and raw-text sources.
+    """
+
+    # ---------- PDF ----------
     @abstractmethod
     def generate_flashcards(
-        self, pdf_path: str, page_range: Tuple[int, int], learning_goal: str
+        self,
+        pdf_path: str,
+        page_range: Tuple[int, int],
+        learning_goal: str,
     ) -> List[Flashcard]:
-        """Generate a batch of flashcards from PDF, page range, and learning goal."""
-        pass
+        """
+        Convert the indicated PDF page range to flashcards.
+        """
 
-# ---------- Utility ----------
+    # ---------- Plain-text ----------
+    @abstractmethod
+    def generate_flashcards_from_text(
+        self,
+        text_content: str,
+        learning_goal: str,
+    ) -> List[Flashcard]:
+        """
+        Convert an arbitrary text snippet to flashcards.
+        """
+
+
+# --------------------------------------------------------------------------- #
+#  Utility: slice a PDF
+# --------------------------------------------------------------------------- #
 def slice_pdf(input_pdf: str, output_pdf: str, start: int, end: int) -> None:
     """
-    Extracts pages [start..end] from input_pdf into output_pdf (1-based, inclusive).
+    Extract pages [start .. end] (1-based) from *input_pdf* and write to *output_pdf*.
     """
     reader = PdfReader(input_pdf)
+    if start < 1 or end > len(reader.pages) or start > end:
+        raise ValueError(
+            f"Ungültiger Bereich {start}-{end} für PDF mit {len(reader.pages)} Seiten."
+        )
+
     writer = PdfWriter()
-    total_pages = len(reader.pages)
-    if start < 1 or end > total_pages or start > end:
-        raise ValueError(f"Invalid page range {start}-{end} for a PDF with {total_pages} pages.")
     for i in range(start - 1, end):
         writer.add_page(reader.pages[i])
-    with open(output_pdf, "wb") as f:
-        writer.write(f)
+    with open(output_pdf, "wb") as fh:
+        writer.write(fh)
 
-# ---------- One-Shot Generator ----------
-class OneShotFlashcardGenerator(FlashcardGenerator):
+
+# --------------------------------------------------------------------------- #
+#  JSON schema for one-shot calls
+# --------------------------------------------------------------------------- #
+_JSON_SCHEMA_FLASHCARDS = {
+    "type": "object",
+    "properties": {
+        "flashcards": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "question": {"type": "string"},
+                    "answer": {"type": "string"},
+                },
+                "required": ["question", "answer"],
+                "additionalProperties": False,
+            },
+            "minItems": 1,
+        }
+    },
+    "required": ["flashcards"],
+    "additionalProperties": False,
+}
+
+
+def _schema_prompt(learning_goal: str) -> str:
+    return (
+        f"Bitte erstelle Fragen und Antworten in Verbindung mit dem Lernziel:\n"
+        f"{learning_goal}\n\n"
+        "Liefere das Ergebnis NUR im folgenden JSON-Format zurück:\n"
+        "{\n"
+        '  "flashcards": [\n'
+        '    {"question": "...", "answer": "..."},\n'
+        "    ...\n"
+        "  ]\n"
+        "}"
+    )
+
+
+# --------------------------------------------------------------------------- #
+#  One-Shot back-end
+# --------------------------------------------------------------------------- #
+class OneShotFlashcardGenerator(FlashcardGenerator, ABC):
     """
-    Single-step: Upload PDF, prompt LLM to make flashcards (JSON schema output).
+    Upload once → model returns the finished flashcards (validated via JSON schema).
     """
+
+    # ----- PDF ------------------------------------------------------------- #
     def generate_flashcards(
-        self, pdf_path: str, page_range: Tuple[int, int], learning_goal: str
+        self,
+        pdf_path: str,
+        page_range: Tuple[int, int],
+        learning_goal: str,
     ) -> List[Flashcard]:
         start, end = page_range
-        temp_pdf = os.path.join(TEMP_DIR, f"oneshot_{start}_{end}.pdf")
-        slice_pdf(pdf_path, temp_pdf, start, end)
+        tmp_pdf = os.path.join(TEMP_DIR, f"oneshot_{start}_{end}.pdf")
+        slice_pdf(pdf_path, tmp_pdf, start, end)
 
-        with open(temp_pdf, "rb") as f:
-            uploaded = CLIENT.files.create(file=f, purpose="user_data")
-        prompt = (
-            f"Bitte erstelle Fragen und Antworten in Verbindung mit dem Lernziel: {learning_goal}\n"
-            "Gib sie im JSON-Format zurück:\n"
-            "{\n"
-            "  \"flashcards\": [\n"
-            "    {\"question\": \"...\", \"answer\": \"...\"},\n"
-            "    ...\n"
-            "  ]\n"
-            "}"
-        )
-        schema = {
-            "type": "object",
-            "properties": {
-                "flashcards": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "question": {"type": "string"},
-                            "answer": {"type": "string"}
-                        },
-                        "required": ["question", "answer"],
-                        "additionalProperties": False
-                    },
-                    "minItems": 1
-                }
-            },
-            "required": ["flashcards"],
-            "additionalProperties": False
-        }
-        response = CLIENT.responses.parse(
-            model="gpt-4.1-nano",
+        with open(tmp_pdf, "rb") as fh:
+            file_obj = CLIENT.files.create(file=fh, purpose="user_data")
+
+        resp = CLIENT.responses.parse(
+            model="gpt-4o-mini",
             input=[
                 {
                     "role": "user",
                     "content": [
-                        {"type": "input_file", "file_id": uploaded.id},
-                        {"type": "input_text", "text": prompt}
-                    ]
+                        {"type": "input_file", "file_id": file_obj.id},
+                        {"type": "input_text", "text": _schema_prompt(learning_goal)},
+                    ],
                 }
             ],
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "strict": True,
-                    "name": "flashcard_generation",
-                    "schema": schema
-                }
-            }
+            text={"format": {"type": "json_schema", "schema": _JSON_SCHEMA_FLASHCARDS}},
         )
-        raw_json = None
+        return self._parse_flashcards(resp.output[0].content[0].text)
+
+    # ----- TXT ------------------------------------------------------------- #
+    def generate_flashcards_from_text(
+        self,
+        text_content: str,
+        learning_goal: str,
+    ) -> List[Flashcard]:
+        # Text goes directly into the prompt
+        full_prompt = (
+            _schema_prompt(learning_goal)
+            + "\n\n--- BEGIN TEXT ---\n"
+            + text_content
+            + "\n--- END TEXT ---"
+        )
+
+        resp = CLIENT.responses.parse(
+            model="gpt-4o-mini",
+            input=[{"role": "user", "content": full_prompt}],
+            text={"format": {"type": "json_schema", "schema": _JSON_SCHEMA_FLASHCARDS}},
+        )
+        return self._parse_flashcards(resp.output[0].content[0].text)
+
+    # --------------------------------------------------------------------- #
+    @staticmethod
+    def _parse_flashcards(raw_json: str) -> List[Flashcard]:
+        import json
+
         try:
-            raw_json = response.output[0].content[0].text
-            import json
             parsed = json.loads(raw_json)
-            flashcards = parsed["flashcards"]
-        except Exception as e:
-            raise ValueError(f"Fehler beim Parsen der Modellantwort: {e}\n\nRohantwort:\n{raw_json}")
+            return [Flashcard(**fc) for fc in parsed["flashcards"]]
+        except Exception as exc:
+            raise ValueError(f"Fehler beim Parsen der Modellantwort: {exc}\n{raw_json}") from exc
 
-        # Convert to Pydantic Flashcard list
-        return [Flashcard(**fc) for fc in flashcards]
 
-# ---------- Chained/Multistep Generator ----------
-def extract_and_clean(pdf_path: str, learning_goal: str) -> str:
-    with open(pdf_path, "rb") as f:
-        uploaded = CLIENT.files.create(file=f, purpose="user_data")
-    cleaning_prompt = (
-        f"Hier ist eine PDF-Datei. Dein Lernziel lautet:\n\n"
-        f"\"{learning_goal}\"\n\n"
-        "Bitte lies die Datei, finde den Abschnitt, der am meisten zum Lernziel passt, "
-        "und entferne Einleitung und Ende, die nicht direkt dazu gehören. "
-        "Gib NUR den relevanten Ausschnitt als Klartext zurück. Und sonst nichts."
+# --------------------------------------------------------------------------- #
+#  Helper chain for the “chained” approach
+# --------------------------------------------------------------------------- #
+def _extract_relevant_text(pdf_path: str, learning_goal: str) -> str:
+    """
+    Let the LLM trim everything unrelated to the learning goal.
+    """
+    with open(pdf_path, "rb") as fh:
+        uploaded = CLIENT.files.create(file=fh, purpose="user_data")
+
+    prompt = (
+        f"Laie bitte den Inhalt der Datei. Dein Lernziel lautet:\n«{learning_goal}»\n\n"
+        "Finde den Abschnitt, der AM BESTEN zum Lernziel passt, "
+        "und gib ihn ohne Einleitung und Schluss zurück, ausschließlich als Klartext."
     )
-    response = CLIENT.responses.create(
-        model="gpt-4.1",
+
+    resp = CLIENT.responses.create(
+        model="gpt-4o-mini",
         input=[
             {
                 "role": "user",
                 "content": [
                     {"type": "input_file", "file_id": uploaded.id},
-                    {"type": "input_text", "text": cleaning_prompt}
-                ]
+                    {"type": "input_text", "text": prompt},
+                ],
             }
-        ]
+        ],
     )
-    return response.output_text.strip()
+    return resp.output_text.strip()
 
-def generate_flashcards_structured(relevant_text: str, learning_goal: str) -> List[Flashcard]:
-    response = CLIENT.responses.parse(
+
+def _flashcards_from_text_llm(text: str, learning_goal: str) -> List[Flashcard]:
+    """
+    Ask the LLM to transform *all* information from text into Q/A pairs.
+    """
+
+    resp = CLIENT.responses.parse(
         model="gpt-4o-2024-08-06",
         input=[
             {
                 "role": "system",
                 "content": (
-                    "Du bist ein hilfreicher Tutor. "
-                    "Erstelle eine komplette Liste, sodass alle information in fragen transformiert werden. Keine information darf verloren gehen. (jede mit 'question' und 'answer') zum angegebenen Lernziel, "
-                    "verwende ausschließlich den bereitgestellten Text."
+                    "Du bist ein hilfreicher Tutor. Verwandle ALLE Informationen in Fragen; "
+                    "nichts darf verloren gehen. Gib ein Array von Objekten "
+                    "{question, answer} zurück."
                 ),
             },
             {
                 "role": "user",
-                "content": (
-                    f"Lernziel: {learning_goal}\n"
-                    f"Text:\n{relevant_text}"
-                )
-            }
+                "content": f"Lernziel: {learning_goal}\n\nTEXT:\n{text}",
+            },
         ],
         text_format=FlashcardBatch,
     )
-    return response.output_parsed.flashcards
+    # The SDK auto-validated against FlashcardBatch
+    return resp.output_parsed.flashcards
 
-class ChainedFlashcardGenerator(FlashcardGenerator):
+
+# --------------------------------------------------------------------------- #
+#  Chained back-end
+# --------------------------------------------------------------------------- #
+class ChainedFlashcardGenerator(FlashcardGenerator, ABC):
     """
-    Multi-step: 1) Extract/clean relevant text from PDF, 2) prompt LLM to make flashcards from text.
+    1. Trim the PDF (or text) to what's relevant, 2. Feed trimmed text to a second prompt.
     """
+
+    # ---------- PDF ----------
     def generate_flashcards(
-        self, pdf_path: str, page_range: Tuple[int, int], learning_goal: str
+        self,
+        pdf_path: str,
+        page_range: Tuple[int, int],
+        learning_goal: str,
     ) -> List[Flashcard]:
         start, end = page_range
-        temp_pdf = os.path.join(TEMP_DIR, f"chain_{start}_{end}.pdf")
-        slice_pdf(pdf_path, temp_pdf, start, end)
-        relevant_text = extract_and_clean(temp_pdf, learning_goal)
-        flashcards = generate_flashcards_structured(relevant_text, learning_goal)
-        return flashcards
+        tmp_pdf = os.path.join(TEMP_DIR, f"chain_{start}_{end}.pdf")
+        slice_pdf(pdf_path, tmp_pdf, start, end)
 
-# ---------- Example usage (remove for production) ----------
+        relevant_text = _extract_relevant_text(tmp_pdf, learning_goal)
+        return _flashcards_from_text_llm(relevant_text, learning_goal)
+
+    # ---------- TXT ----------
+    def generate_flashcards_from_text(
+        self,
+        text_content: str,
+        learning_goal: str,
+    ) -> List[Flashcard]:
+        # skip extract-step; go straight to Q/A generation
+        return _flashcards_from_text_llm(text_content, learning_goal)
+
+
+# --------------------------------------------------------------------------- #
+#  Demo (remove or protect with __main__ in production)
+# --------------------------------------------------------------------------- #
 if __name__ == "__main__":
-    pdf_path = "/path/to/your.pdf"
-    page_range = (2, 4)
-    learning_goal = "Beispiel-Lernziel"
-    generator = ChainedFlashcardGenerator()
-    # generator = OneShotFlashcardGenerator()  # <- switch as needed
-    flashcards = generator.generate_flashcards(pdf_path, page_range, learning_goal)
-    for i, fc in enumerate(flashcards, 1):
-        print(f"Karte {i}:\nFrage: {fc.question}\nAntwort: {fc.answer}\n")
+    DEMO_PDF = "/path/to/your.pdf"
+    DEMO_TXT = "/path/to/your.txt"
+    GOAL = "Beispiel-Lernziel"
+
+    generator: FlashcardGenerator = ChainedFlashcardGenerator()
+
+    print("== PDF DEMO ==")
+    pdf_cards = generator.generate_flashcards(DEMO_PDF, (1, 2), GOAL)
+    for i, c in enumerate(pdf_cards, 1):
+        print(f"{i}. Q: {c.question}\n   A: {c.answer}\n")
+
+    print("== TXT DEMO ==")
+    with open(DEMO_TXT, encoding="utf-8") as fh:
+        txt_cards = generator.generate_flashcards_from_text(fh.read(), GOAL)
+    for i, c in enumerate(txt_cards, 1):
+        print(f"{i}. Q: {c.question}\n   A: {c.answer}\n")

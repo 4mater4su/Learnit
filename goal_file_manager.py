@@ -24,12 +24,57 @@ class GoalFileManagerFrame(tk.LabelFrame):
 
         self.copy_btn = tk.Button(btn_row, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
         self.copy_btn.pack(side="left", padx=4)
-        self.mkdir_btn = tk.Button(btn_row, text="Verzeichnis anlegen", command=self.create_goal_directory, state="disabled")
-        self.mkdir_btn.pack(side="left", padx=4)
+
         self.adddoc_btn = tk.Button(btn_row, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
         self.adddoc_btn.pack(side="left", padx=4)
 
+        self.llm_btn = tk.Button(btn_row, text="LLM-Antwort", command=self.generate_llm_response, state="disabled")
+        self.llm_btn.pack(side="left", padx=4)
+
         self.refresh_all_goal_colors = refresh_all_goal_colors
+
+    
+    def generate_llm_response(self):
+        """Generate a medical-school-level explanation of the learning goal via the new OpenAI SDK (v1)."""
+        goal = self.goal_getter()
+        if not goal:
+            messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
+            return
+
+        dirname   = self.sanitize_dirname(goal)
+        outdir    = self.outdir_getter()
+        targetdir = os.path.join(outdir, dirname)
+        os.makedirs(targetdir, exist_ok=True)
+
+        try:
+            # --- NEW OpenAI v1 style ---
+            from openai import OpenAI
+            client = OpenAI()
+
+            prompt = (
+                "You are an expert medical educator.\n\n"
+                f"Please provide a detailed medical-school-level explanation of the "
+                f"following learning goal:\n\n{goal}"
+            )
+
+            resp = client.responses.create(
+                model="gpt-4o-mini",      # or "gpt-4.1" if that’s your preferred model
+                input=prompt
+            )
+            text = resp.output_text
+            # --------------------------------
+
+            # save to TXT
+            filename = f"LLM.txt"
+            path = os.path.join(targetdir, filename)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+
+            self.update_filelist()
+            self.refresh_all_goal_colors()
+        except Exception as e:
+            messagebox.showerror("Fehler", f"LLM-Anfrage fehlgeschlagen:\n{e}")
+
 
     # The following methods use goal_getter() and outdir_getter()
     def update_filelist(self):
@@ -37,44 +82,57 @@ class GoalFileManagerFrame(tk.LabelFrame):
         self.filelist_box.delete(0, tk.END)
         if not goal:
             self.filelist_box.insert(tk.END, "(Kein Lernziel ausgewählt)")
+            self.copy_btn.config(state="disabled")
+            self.adddoc_btn.config(state="disabled")
+            self.llm_btn.config(state="disabled")
             return
+        
         dirname = self.sanitize_dirname(goal)
         outdir = self.outdir_getter()
         dirpath = os.path.join(outdir, dirname)
         if not os.path.isdir(dirpath):
             self.filelist_box.insert(tk.END, "(Kein Verzeichnis angelegt)")
+            # still allow LLM and adddoc to auto-create
+            self.copy_btn.config(state="normal")
+            self.adddoc_btn.config(state="normal")
+            self.llm_btn.config(state="normal")
             return
+        
         files = sorted([f for f in os.listdir(dirpath) if os.path.isfile(os.path.join(dirpath, f))])
         if not files:
             self.filelist_box.insert(tk.END, "(Keine Dateien vorhanden)")
         else:
             for f in files:
                 self.filelist_box.insert(tk.END, f)
+        
+        # enable buttons when we have a goal (dir exists or will be auto-created)
+        self.copy_btn.config(state="normal")
+        self.adddoc_btn.config(state="normal")
+        self.llm_btn.config(state="normal")
 
     def copy_to_clipboard(self):
         goal = self.goal_getter()
         if goal:
             self.clipboard_clear()
             self.clipboard_append(goal)
-            messagebox.showinfo("Kopiert", "Lernziel kopiert.")
 
-    def create_goal_directory(self):
-        goal = self.goal_getter()
-        if not goal:
-            messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
-            return
-        dirname = self.sanitize_dirname(goal)
-        outdir = self.outdir_getter()
-        full_path = os.path.join(outdir, dirname)
-        try:
-            os.makedirs(full_path, exist_ok=False)
-            messagebox.showinfo("Erfolg", f"Verzeichnis erstellt: {full_path}")
-            self.update_filelist()
-            self.refresh_all_goal_colors()
-        except FileExistsError:
-            messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
-        except Exception as e:
-            messagebox.showerror("Fehler", f"Verzeichnis konnte nicht erstellt werden:\n{e}")
+    # def create_goal_directory(self):
+    #     goal = self.goal_getter()
+    #     if not goal:
+    #         messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
+    #         return
+    #     dirname = self.sanitize_dirname(goal)
+    #     outdir = self.outdir_getter()
+    #     full_path = os.path.join(outdir, dirname)
+    #     try:
+    #         os.makedirs(full_path, exist_ok=False)
+    #         messagebox.showinfo("Erfolg", f"Verzeichnis erstellt: {full_path}")
+    #         self.update_filelist()
+    #         self.refresh_all_goal_colors()
+    #     except FileExistsError:
+    #         messagebox.showwarning("Schon vorhanden", f"Verzeichnis existiert bereits:\n{full_path}")
+    #     except Exception as e:
+    #         messagebox.showerror("Fehler", f"Verzeichnis konnte nicht erstellt werden:\n{e}")
 
     def add_document_to_goal(self):
         goal = self.goal_getter()
@@ -98,7 +156,6 @@ class GoalFileManagerFrame(tk.LabelFrame):
             except Exception as e:
                 errors.append(f"{f}: {e}")
         if not errors:
-            messagebox.showinfo("Erfolg", "Dokument(e) hinzugefügt.")
             self.update_filelist()
             self.refresh_all_goal_colors()
         else:
