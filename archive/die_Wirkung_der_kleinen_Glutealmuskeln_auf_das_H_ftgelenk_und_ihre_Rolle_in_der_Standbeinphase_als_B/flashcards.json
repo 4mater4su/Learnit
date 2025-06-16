@@ -1,27 +1,43 @@
 {
   "learning_goal": "die Wirkung der kleinen Glutealmuskeln auf das Hüftgelenk und ihre Rolle in der Standbeinphase als Beispiel für die gelenksstabilisierende Wirkung von Muskeln beschreiben können.",
-  "page_range": "1-3",
-  "pdf_path": "archive/die_Wirkung_der_kleinen_Glutealmuskeln_auf_das_H_ftgelenk_und_ihre_Rolle_in_der_Standbeinphase_als_B/M10_komplett_S2-4.pdf",
+  "source": "TXT LLM.txt",
+  "file_path": "archive/die_Wirkung_der_kleinen_Glutealmuskeln_auf_das_H_ftgelenk_und_ihre_Rolle_in_der_Standbeinphase_als_B/LLM.txt",
   "flashcards": [
     {
-      "question": "Welche Muskeln bilden die kleinen Glutealmuskeln?",
-      "answer": "Die kleinen Glutealmuskeln sind der Gluteus medius und der Gluteus minimus."
+      "question": "Was sind die kleinen Glutealmuskeln und wo sind sie anatomisch gelegen?",
+      "answer": "Die kleinen Glutealmuskeln (Musculus gluteus minimus) setzen an der äußeren Fläche des Schambeins und an der hinteren Fläche des Beckens an und inserieren am großen Rollhügel (Trochanter major) des Oberschenkelknochens."
     },
     {
-      "question": "Wo setzen die kleinen Glutealmuskeln am Oberschenkel an?",
-      "answer": "Sie setzen am Trochanter major an."
+      "question": "Welche Funktion haben die kleinen Glutealmuskeln hinsichtlich der Abduktion des Oberschenkels?",
+      "answer": "Die kleinen Glutealmuskeln sind primär für die Abduktion des Oberschenkels verantwortlich, vor allem wenn das Bein von der Mittellinie des Körpers wegbewegt wird."
     },
     {
-      "question": "Welche Funktionen haben die kleinen Glutealmuskeln am Hüftgelenk?",
-      "answer": "Flexion/Extension, Innen-/Außenrotation und Abduktion; sie stabilisieren das Becken und verhindern ein Kippen zur Spielbeinseite."
+      "question": "Wie wirken die kleinen Glutealmuskeln während der Standbeinphase auf das Hüftgelenk?",
+      "answer": "In der Standbeinphase stabilisieren sie das Hüftgelenk, verhindern übermäßige Medialrotation und Abduktion des Oberschenkels und positionieren das Becken neutral."
     },
     {
-      "question": "Welche Rolle spielen die kleinen Glutealmuskeln in der Standbeinphase des Gangs?",
-      "answer": "Sie kontrahieren auf der Standbeinseite, um ein Kippen des Beckens zur Spielbeinseite zu verhindern."
+      "question": "Was passiert bei unzureichender Stärke der kleinen Glutealmuskeln in der Standbeinphase?",
+      "answer": "Es kann zu einem Trendelenburg-Zeichen kommen, einer Absenkung des Beckens auf der gegenüberliegenden Seite."
     },
     {
-      "question": "Was ist das Trendelenburg-Zeichen und was zeigt es an?",
-      "answer": "Das Trendelenburg-Zeichen zeigt an, dass bei einer Atrophie des Gluteus medius das Becken zur gesunden Seite kippt."
+      "question": "Auf welche Weise tragen die kleinen Glutealmuskeln zur Gehmechanik bei?",
+      "answer": "Sie stabilisieren das Becken, erlauben Beweglichkeit des Beins ohne Schräglage des Oberkörpers und ermöglichen effiziente Fortbewegung."
+    },
+    {
+      "question": "Welche Rolle spielt die Innervation in der Funktion der kleinen Glutealmuskeln?",
+      "answer": "Sie werden durch den Nervus gluteus superior innerviert, was entscheidend für ihre Funktion ist."
+    },
+    {
+      "question": "Warum sind die kleinen Glutealmuskeln essenziell bei der Balancierung des Beckens?",
+      "answer": "Sie halten das Becken in neutraler Position und stabilisieren es bei einseitiger Belastung, z.B. beim Gehen."
+    },
+    {
+      "question": "Welche Probleme könnten aufgrund einer Dysfunktion der kleinen Glutealmuskeln auftreten?",
+      "answer": "Biomechanische Probleme und Pathologien des Hüftgelenks können entstehen."
+    },
+    {
+      "question": "Wie unterstützen die kleinen Glutealmuskeln die Übertragung des Körpergewichts?",
+      "answer": "Sie stabilisieren das Hüftgelenk und verhindern ungewollte Bewegungen während der Körpergewicht auf das Standbein verlagert wird."
     }
   ]
 }

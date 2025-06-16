@@ -55,7 +55,7 @@ if __name__ == "__main__":
         pdf_path="PDFs/M10_komplett.pdf",
         start_page=2,
         end_page=2,
-        question="Bitte analysiere die Antwort zum Lernziel: Die Lage und Funktion des Oberschenkelkniestreckers (M. quadriceps femoris) als Beispiel für eine gelenksübergreifende Muskelwirkung beschreiben und erläutern können. Und verwandel den Inhalt in eine umfangreiche liste von Fragen und Antworten, die detailliert genug sind zum Lernen für das Medizinstudium."
+        question="Bitte mit stichpunkten zusammenfassen"
     )
 
     print(answer)
