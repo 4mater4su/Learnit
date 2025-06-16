@@ -78,6 +78,7 @@ def upload_summaries_to_vector_store(
     vs = client.vector_stores.create(name=vector_store_name)
     print(f"Created vector store → id={vs.id}")
 
+    i = 1
     for path in summary_paths:
         print(f"Uploading summary file {path}...")
         with open(path, "rb") as f:
@@ -85,7 +86,8 @@ def upload_summaries_to_vector_store(
                 vector_store_id=vs.id,
                 file=f
             )
-        print(f"Uploaded → file_id={job.file_id}")
+        print(f"Uploaded → file_page = {i}")
+        i = i + 1
 
     print("All summaries uploaded.")
     return vs.id
@@ -116,8 +118,8 @@ if __name__ == "__main__":
     pdf_path   = "PDFs/M10_komplett_S1-6.pdf"
     start_page = 1
     end_page   = 6
-    question   = "Bitte mit Stichpunkten zusammenfassen"
-    final_query = "Schenkelhalsfraktur"
+    question   = ""
+    final_query = "Skelettmuskelfunktionen"
 
     # 1) Extract & summarize
     summaries = extract_and_summarize_pages(
