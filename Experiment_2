@@ -1,0 +1,51 @@
+from openai import OpenAI
+
+client = OpenAI()
+
+# 1️⃣ Create (or get) your vector store
+print("Creating vector store…")
+vs = client.vector_stores.create(name="Experiment_VS")
+print(vs, "\n")
+
+# 2️⃣ Loop over your files and upload + attach each one
+for i in range(1, 6):
+    path = f"pages/page_{i}.pdf"
+    print(f"Uploading {path!r}…")
+    with open(path, "rb") as f:
+        file_obj = client.files.create(
+            file=f,
+            purpose="user_data"
+        )
+    print(" → File ID:", file_obj.id)
+
+    print(" Attaching to vector store…")
+    vsf = client.vector_stores.files.create(
+        vector_store_id=vs.id,
+        file_id=file_obj.id,
+        attributes={"page": str(i)}
+    )
+    print(" → Vector store file:", vsf.id, "\n")
+
+# 3️⃣ (Optional) Retrieve or verify one of them
+# e.g., retrieve the attachment for page 3
+retrieved = client.vector_stores.files.retrieve(
+    vector_store_id=vs.id,
+    file_id=vsf.id  # or keep track of each vsf.id in a list
+)
+print("Retrieved attachment:", retrieved, "\n")
+
+# 4️⃣ Do your searches...
+user_query = "Wie sieht die Diagnostik bei klinisch relevanter Beinlängendifferenz aus?"
+response = client.responses.create(
+    model="gpt-4o-mini",
+    input=user_query,
+    tools=[{
+        "type": "file_search",
+        "vector_store_ids": [vs.id]
+    }]
+)
+print("Response:", response, "\n")
+
+# 5️⃣ Clean up
+deleted = client.vector_stores.delete(vector_store_id=vs.id)
+print("Deleted vector store:", deleted)
