@@ -26,13 +26,13 @@ for i in range(1, 6):
     )
     print(" → Vector store file:", vsf.id, "\n")
 
-# 3️⃣ (Optional) Retrieve or verify one of them
-# e.g., retrieve the attachment for page 3
-retrieved = client.vector_stores.files.retrieve(
-    vector_store_id=vs.id,
-    file_id=vsf.id  # or keep track of each vsf.id in a list
-)
-print("Retrieved attachment:", retrieved, "\n")
+# # 3️⃣ (Optional) Retrieve or verify one of them
+# # e.g., retrieve the attachment for page 3
+# retrieved = client.vector_stores.files.retrieve(
+#     vector_store_id=vs.id,
+#     file_id=vsf.id  # or keep track of each vsf.id in a list
+# )
+# print("Retrieved attachment:", retrieved, "\n")
 
 # 4️⃣ Do your searches...
 user_query = "Wie sieht die Diagnostik bei klinisch relevanter Beinlängendifferenz aus?"
@@ -45,6 +45,36 @@ response = client.responses.create(
     }]
 )
 print("Response:", response, "\n")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1) Extract all cited file IDs & filenames
+cited = []
+for msg in response.output:
+    # look for ResponseOutputMessage objects
+    if getattr(msg, "type", None) == "message":
+        for part in msg.content:
+            for ann in getattr(part, "annotations", []):
+                if getattr(ann, "type", "") == "file_citation":
+                    cited.append((ann.filename, ann.file_id))
+
+print("🔖 Cited files:")
+for filename, file_id in cited:
+    print(f"- {filename}: {file_id}")
+
+# 2) Re-print the diagnostic steps in Markdown for readability
+#    (we assume the text is in the first ResponseOutputText)
+text = None
+for msg in response.output:
+    if getattr(msg, "type", None) == "message":
+        for part in msg.content:
+            if hasattr(part, "text"):
+                text = part.text
+                break
+if text:
+    print("\n### Diagnostik einer klinisch relevanten Beinlängendifferenz\n")
+    print(text)
+# ─────────────────────────────────────────────────────────────────────────────
+
 
 # 5️⃣ Clean up
 deleted = client.vector_stores.delete(vector_store_id=vs.id)
