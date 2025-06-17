@@ -15,7 +15,7 @@ from goal_file_manager import GoalFileManagerFrame
 from pdf_slice_frame import PDFSliceFrame
 from flashcard_review_window import FlashcardReviewWindow
 from flashcard_editor import FlashcardEditor
-from flashcard_generation import slice_pdf
+from slice_pdf import slice_pdf
 
 
 def sanitize_dirname(name):
