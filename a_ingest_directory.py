@@ -54,23 +54,3 @@ def ingest_directory(pages_dir: str, vector_store_name: str, vector_store_id_fil
         print(" → Attached as:", vsf.id, "\n")
 
     print("✅ Ingestion complete. You can now query this store anytime.")
-
-
-def main():
-    """
-    Main entry point to ingest PDFs using environment variables or default values.
-    """
-    # Read configuration from environment variables, with defaults
-    pages_dir = os.getenv("PAGES_DIR", "pages")
-    vector_store_name = os.getenv("VECTOR_STORE_NAME", "Experiment_VS")
-    vector_store_id_file = os.getenv("VECTOR_STORE_ID_FILE", ".vector_store_id")
-
-    # Validate pages directory
-    if not os.path.isdir(pages_dir):
-        raise FileNotFoundError(f"Pages directory not found: {pages_dir}")
-
-    ingest_directory(pages_dir, vector_store_name, vector_store_id_file)
-
-
-if __name__ == "__main__":
-    main()

@@ -1,9 +1,9 @@
+from openai import OpenAI
+client = OpenAI()
+
 """
 List
 """
-
-from openai import OpenAI
-client = OpenAI()
 
 vector_stores = client.vector_stores.list()
 print(vector_stores)
@@ -11,9 +11,6 @@ print(vector_stores)
 """
 Delete
 """
-
-from openai import OpenAI
-client = OpenAI()
 
 # 1. List all vector stores
 page = client.vector_stores.list()
