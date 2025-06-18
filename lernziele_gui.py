@@ -141,17 +141,22 @@ class LernzieleViewer(tk.Tk):
         dest_dir = os.path.join(self.current_outdir,
         sanitize_dirname(self.current_text))
 
-        # Use LearnIt’s semantic search + copy helper
-        copied = self.learnit.search_and_copy_page(
+        # Copy **all** cited pages into a new <pdf>_v* folder
+        copied = self.learnit.search_and_copy_pages(
             query=query,
             pages_dir=pages_dir,
             dest_dir=dest_dir,
         )
 
-        if copied is None:
+        if not copied:
             messagebox.showinfo("PageFinder",
                                 "Keine passende Seite im PDF-Archiv gefunden.")
-        
+        else:
+            messagebox.showinfo(
+                "PageFinder",
+                f"{len(copied)} Seite(n) nach\n{copied[0].parent}\nkopiert.",
+            )
+
         self.goal_file_manager.update_filelist()
         self.flashcard_manager_frame.update_pdf_list()
 

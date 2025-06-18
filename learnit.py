@@ -119,37 +119,55 @@ class LearnIt:
 
     # 3) semantic search + copy ----------------------------------------------
 
-    def search_and_copy_page(
+    def search_and_copy_pages(
         self,
         query: str,
         *,
         dest_dir: str | Path,
         pages_dir: str | Path | None = None,
-    ) -> Optional[Path]:
-        """Run *query* through file-search, copy first cited PDF into *dest_dir*.
-
-        Looks recursively under *pages_dir* (default: ``self.pages_root``).
-        Returns the path to the copied file or *None* if nothing was cited.
-        """
+    ) -> List[Path]:
+        """Run *query* through file-search and copy all cited PDFs directly
+        into *dest_dir*, ensuring no duplicates. Returns list of newly copied Paths."""
+        # 1. Perform semantic file search
         resp = self.client.responses.create(
             model="gpt-4o-mini",
             input=query,
             tools=[{"type": "file_search", "vector_store_ids": [self.vector_store_id]}],
         )
-
         cited = self._extract_citations(resp)
         if not cited:
-            return None
+            return []
 
-        filename, _ = cited[0]
-        pages_dir = Path(pages_dir or self.pages_root)
-        src = self._locate_file_recursively(pages_dir, filename)
+        # 2. Deduplicate citations by filename (preserve order)
+        seen_files = set()
+        unique_cited = []
+        for filename, file_id in cited:
+            if filename not in seen_files:
+                seen_files.add(filename)
+                unique_cited.append((filename, file_id))
 
-        dest_dir = Path(dest_dir).expanduser()
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        dest = dest_dir / filename
-        shutil.copy(src, dest)
-        return dest
+        # 3. Ensure destination directory exists
+        target = Path(dest_dir).expanduser()
+        target.mkdir(parents=True, exist_ok=True)
+
+        # 4. Copy each unique cited file into dest_dir if not already present
+        pages_root = Path(pages_dir or self.pages_root)
+        copied: List[Path] = []
+        for filename, _ in unique_cited:
+            dst = target / filename
+            if dst.exists():
+                # skip duplicates already in dest_dir
+                continue
+            src = self._locate_file_recursively(pages_root, filename)
+            shutil.copy(src, dst)
+            copied.append(dst)
+
+        # 5. Print summary to console
+        if copied:
+            print("Copied pages:", ", ".join(p.name for p in copied))
+        else:
+            print("No new pages to copy (all were already present).")
+        return copied
 
     # ─────────── internal helpers ────────────
 
