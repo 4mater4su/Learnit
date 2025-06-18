@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
-"""learnit.py – a **library version** (non‑CLI) that unifies PDF slicing, vector‑store ingestion and semantic lookup.
+"""learnit.py – library utilities for PDF slicing, vector‑store ingestion and semantic retrieval.
+
+New in this version
+-------------------
+1. **Vector‑store ID files are now per store** – kept under ``.vector_store_ids/<store>.id`` so you can juggle many stores in one project.
+2. **`LearnIt.from_pdf()`** – convenience constructor that derives the vector‑store name from the PDF’s stem (`<stem>_VS`).
 
 Example
 =======
->>> from learnit import LearnIt
->>> li = LearnIt("Experiment_VS")
->>> pages_dir = li.slice_pdf("M10_komplett.pdf")           # 1‑page PDFs under PAGES_ROOT/M10_komplett
->>> li.ingest_directory(pages_dir)                          # upload pages once
->>> li.search_and_copy_page(
-...     query="Wie sieht die Diagnostik bei einer Schenkelhalsfraktur aus?",
-...     dest_dir="~/Desktop/archive/goal1")                # copy the best hit
+```python
+from learnit import LearnIt
 
-Notes
------
-* The class caches the vector‑store ID in `.vector_store_id` so you create the
-  store only once.
-* `pages_root` defaults to `~/Desktop/projects/Learnit/PDF_pages`. Each call to
-  :py:meth:`slice_pdf` creates a **subfolder named after the PDF stem**. The
-  improved :py:meth:`search_and_copy_page` now detects that automatically, so
-  you no longer need to pass `pages_dir` manually.
+li = LearnIt.from_pdf("M10_komplett.pdf")          # store named "M10_komplett_VS"
+pages_dir = li.slice_pdf("M10_komplett.pdf")        # 1‑page PDFs
+li.ingest_directory(pages_dir)                       # upload once
+li.search_and_copy_page(
+    query="Wie sieht die Diagnostik bei einer Schenkelhalsfraktur aus?",
+    dest_dir="~/Desktop/archive/goal1")
+```
 
-Install requirements
---------------------
-    pip install openai PyPDF2
+Install
+-------
+``pip install openai PyPDF2``
 """
 
 from __future__ import annotations
@@ -43,16 +42,37 @@ class LearnIt:
     store, and performing semantic retrieval.
     """
 
-    #: where the vector‑store ID is persisted (relative to cwd)
-    VECTOR_ID_FILE = Path(".vector_store_id")
+    #: folder that caches one *file per vector‑store* (created on demand)
+    VECTOR_ID_DIR = Path(".vector_store_ids")
 
-    def __init__(self, store_name: str, *, pages_root: Path | str | None = None):
-        self.client = OpenAI()
+    def __init__(
+        self,
+        store_name: str,
+        *,
+        pages_root: Path | str | None = None,
+        client: Optional[OpenAI] = None,
+    ) -> None:
+        """Use or create *store_name* and remember its ID under ``.vector_store_ids``.
+
+        ``pages_root`` defaults to ``~/Desktop/projects/Learnit/PDF_pages``.
+        """
+        self.client = client or OpenAI()
         self.store_name = store_name
         self.pages_root = Path(pages_root or (Path.home() / "Desktop/projects/Learnit/PDF_pages"))
         self.pages_root.mkdir(parents=True, exist_ok=True)
-        self.vector_store_id = self._get_or_create_store(store_name)
-        self._save_vector_id(self.vector_store_id)
+
+        self.VECTOR_ID_DIR.mkdir(exist_ok=True)
+        self.vector_store_id = self._load_or_create_store_id(store_name)
+
+    # ─────────── class helpers ────────────
+
+    @classmethod
+    def from_pdf(cls, pdf_path: str | Path, **kwargs):
+        """Return *LearnIt* where ``store_name = <pdf_stem>_VS``. Handy when each
+        PDF owns its own store.
+        """
+        pdf_stem = Path(pdf_path).stem
+        return cls(f"{pdf_stem}_VS", **kwargs)
 
     # ─────────── public API ────────────
 
@@ -67,10 +87,8 @@ class LearnIt:
         out_dir.mkdir(parents=True, exist_ok=True)
 
         reader = PdfReader(str(pdf_path))
-
         for i, page in enumerate(reader.pages, start=1):
-            out_name = f"{pdf_path.stem}_page_{i}.pdf"
-            out_file = out_dir / out_name
+            out_file = out_dir / f"{pdf_path.stem}_page_{i}.pdf"
             writer = PdfWriter()
             writer.add_page(page)
             with out_file.open("wb") as fh:
@@ -108,19 +126,15 @@ class LearnIt:
         dest_dir: str | Path,
         pages_dir: str | Path | None = None,
     ) -> Optional[Path]:
-        """Run *query* through file‑search, copy first cited PDF into *dest_dir*.
+        """Run *query* through file-search, copy first cited PDF into *dest_dir*.
 
-        If *pages_dir* is omitted, the method first looks in ``self.pages_root``
-        **and its sub‑directories**. So you can ignore the parameter in the
-        common case where you always slice PDFs under the default root.
-
+        Looks recursively under *pages_dir* (default: ``self.pages_root``).
         Returns the path to the copied file or *None* if nothing was cited.
         """
-        store_id = self.vector_store_id
         resp = self.client.responses.create(
             model="gpt-4o-mini",
             input=query,
-            tools=[{"type": "file_search", "vector_store_ids": [store_id]}],
+            tools=[{"type": "file_search", "vector_store_ids": [self.vector_store_id]}],
         )
 
         cited = self._extract_citations(resp)
@@ -129,26 +143,26 @@ class LearnIt:
 
         filename, _ = cited[0]
         pages_dir = Path(pages_dir or self.pages_root)
+        src = self._locate_file_recursively(pages_dir, filename)
 
-        # ── locate the source file ─────────────────────────────────────────
-        src = pages_dir / filename
-        if not src.exists():
-            matches = list(pages_dir.rglob(filename))
-            if matches:
-                src = matches[0]
-            else:
-                raise FileNotFoundError(
-                    f"{filename} not found under {pages_dir} (searched recursively)"
-                )
-
-        # ── copy to destination ────────────────────────────────────────────
         dest_dir = Path(dest_dir).expanduser()
         dest_dir.mkdir(parents=True, exist_ok=True)
         dest = dest_dir / filename
         shutil.copy(src, dest)
         return dest
 
-    # ─────────── helpers ────────────
+    # ─────────── internal helpers ────────────
+
+    # vector-store helpers ----------------------------------------------------
+
+    def _load_or_create_store_id(self, name: str) -> str:
+        id_file = self.VECTOR_ID_DIR / f"{name}.id"
+        if id_file.exists():
+            return id_file.read_text().strip()
+        # else create store and cache id
+        store_id = self._get_or_create_store(name)
+        id_file.write_text(store_id)
+        return store_id
 
     def _get_or_create_store(self, name: str) -> str:
         stores = self.client.vector_stores.list().data
@@ -157,16 +171,12 @@ class LearnIt:
             store = self.client.vector_stores.create(name=name)
         return store.id
 
-    @classmethod
-    def _save_vector_id(cls, vid: str) -> None:
-        cls.VECTOR_ID_FILE.write_text(vid)
+    # file‑system helpers -----------------------------------------------------
 
     @staticmethod
     def _numeric_sort_key(fname: str) -> int:
         m = re.search(r"(\d+)(?=\.pdf$)", fname, re.IGNORECASE)
         return int(m.group(1)) if m else -1
-
-    # extraction of citations -------------------------------------------------
 
     @staticmethod
     def _extract_citations(resp) -> List[Tuple[str, str]]:
@@ -178,3 +188,13 @@ class LearnIt:
                         if getattr(ann, "type", "") == "file_citation":
                             cited.append((ann.filename, ann.file_id))
         return cited
+
+    @staticmethod
+    def _locate_file_recursively(root: Path, filename: str) -> Path:
+        direct = root / filename
+        if direct.exists():
+            return direct
+        matches = list(root.rglob(filename))
+        if matches:
+            return matches[0]
+        raise FileNotFoundError(f"{filename} not found under {root}")

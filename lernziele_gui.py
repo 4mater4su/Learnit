@@ -16,7 +16,7 @@ from pdf_slice_frame import PDFSliceFrame
 from flashcard_review_window import FlashcardReviewWindow
 from flashcard_editor import FlashcardEditor
 from slice_pdf import slice_pdf
-from search_and_copy_page import search_and_copy_page
+from a_search_and_copy_page import search_and_copy_page
 
 def sanitize_dirname(name):
     # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
