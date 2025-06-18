@@ -1,3 +1,5 @@
+# search_and_copy_page.py
+
 import os
 import platform
 import shutil
@@ -79,9 +81,17 @@ def search_and_copy_page(query: str, individual_pdfs_dir: str, learning_goal_dir
 if __name__ == "__main__":
 
     query = "Wie sieht die Diagnostik bei einer Schenkelhalsfraktur aus?"
-    individual_pdfs_dir = "/Users/robing/Desktop/projects/Learnit/test"
+    individual_pdfs_dir = "/Users/robing/Desktop/projects/Learnit/PDF_pages"
     learning_goal_dir = "/Users/robing/Desktop/projects/Learnit/archive/die_Begriffe__Adaptation__und__Plastizit_t__im_Hinblick_auf_das_Fasertypenmuster_und_-gr__e_eines_ak"
-    vector_store_id = "vs_6852d7c195f08191ae1ecbc66c8adee6"
+    
+    
+    # 1️⃣ Load the existing vector store ID
+    try:
+        with open(".vector_store_id") as f:
+            vs_id = f.read().strip()
+    except FileNotFoundError:
+        raise RuntimeError("Could not find .vector_store_id—run ingest_pages.py first!")
+    vector_store_id = vs_id
 
 
     search_and_copy_page(query, individual_pdfs_dir, learning_goal_dir, vector_store_id)

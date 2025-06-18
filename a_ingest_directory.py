@@ -1,6 +1,7 @@
 # a_ingest_pages.py
 import os
 from openai import OpenAI
+import re
 
 
 def ingest_directory(pages_dir: str, vector_store_name: str, vector_store_id_file: str):
@@ -31,9 +32,18 @@ def ingest_directory(pages_dir: str, vector_store_name: str, vector_store_id_fil
         f.write(vs.id)
 
     # Upload & attach each PDF in the directory
-    for fname in sorted(os.listdir(pages_dir)):
-        if not fname.lower().endswith('.pdf'):
-            continue
+    # collect and numerically sort only the PDF files
+    pdf_files = [
+        f for f in os.listdir(pages_dir)
+        if f.lower().endswith(".pdf")
+    ]
+
+    def page_number(fname: str) -> int:
+        # extract the digits right before “.pdf”
+        m = re.search(r"(\d+)(?=\.pdf$)", fname)
+        return int(m.group(1)) if m else -1
+
+    for fname in sorted(pdf_files, key=page_number):
         path = os.path.join(pages_dir, fname)
         print(f"Uploading {path!r}…")
         with open(path, "rb") as f_pdf:

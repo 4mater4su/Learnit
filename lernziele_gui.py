@@ -16,7 +16,7 @@ from pdf_slice_frame import PDFSliceFrame
 from flashcard_review_window import FlashcardReviewWindow
 from flashcard_editor import FlashcardEditor
 from slice_pdf import slice_pdf
-
+from search_and_copy_page import search_and_copy_page
 
 def sanitize_dirname(name):
     # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
@@ -45,6 +45,14 @@ class LernzieleViewer(tk.Tk):
         # --- Details text ---
         self.details_text = tk.Text(self.scrollable_frame, height=4, wrap="word", state="disabled")
         self.details_text.pack(fill="x", padx=10, pady=(0, 10))
+        # ——— PageFinder button ———
+        self.pagefinder_btn = tk.Button(
+            self.scrollable_frame,
+            text="PageFinder",
+            command=self.open_pagefinder,
+            width=15
+        )
+        self.pagefinder_btn.pack(pady=(0, 10))
 
         # --- Goal File Manager ---
         self.goal_file_manager = GoalFileManagerFrame(
@@ -125,6 +133,16 @@ class LernzieleViewer(tk.Tk):
         self.listbox.pack(fill="x", pady=(0, 10))
         v_scroll.config(command=self.listbox.yview)
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
+
+    # TODO
+    def open_pagefinder(self):
+        query = self.current_text
+        individual_pdfs_dir = "/Users/robing/Desktop/projects/Learnit/PDF_pages/M10_komplett"
+        learning_goal_dir = os.path.join(self.current_outdir, sanitize_dirname(self.current_text))
+        search_and_copy_page(query, individual_pdfs_dir, learning_goal_dir)
+        
+        self.goal_file_manager.update_filelist()
+        self.flashcard_manager_frame.update_pdf_list()
 
     def get_goal_color(self, goal):
         outdir = self.current_outdir
