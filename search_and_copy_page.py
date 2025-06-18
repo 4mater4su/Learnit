@@ -1,9 +1,7 @@
 # search_and_copy_page.py
 
 import os
-import platform
 import shutil
-import subprocess
 from openai import OpenAI
 
 client = OpenAI()

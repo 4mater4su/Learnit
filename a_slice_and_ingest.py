@@ -1,6 +1,6 @@
-# slice_and_ingest.py
+# a_slice_and_ingest.py
 import os
-from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2 import PdfReader
 from a_ingest_directory import ingest_directory
 from slice_pdf import slice_pdf
 
