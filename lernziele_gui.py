@@ -27,6 +27,7 @@ class LernzieleViewer(tk.Tk):
     def __init__(self, learnit: LearnIt):
         super().__init__()
         self.learnit = learnit
+        self.learnit_instances = {learnit.store_name: learnit}
         self.title("Lernziele Viewer")
         self.geometry("800x800")
         self.default_outdir = "archive"
@@ -37,8 +38,9 @@ class LernzieleViewer(tk.Tk):
         # --- Create scrollable content area ---
         self.scrollable_frame = self._create_scrollable_area()
         
-        # --- Top: Excel Loader ---
+        # --- Top: Excel Loader & Vector-Store chooser ---
         self._create_excel_loader(self.scrollable_frame)
+        self._create_vector_store_selector(self.scrollable_frame)
 
         # --- List of Learning Goals ---
         self._create_learning_goal_list(self.scrollable_frame)
@@ -125,6 +127,32 @@ class LernzieleViewer(tk.Tk):
         top_frame.pack(fill="x")
         tk.Button(top_frame, text="Excel öffnen…", command=self.choose_and_load_file, width=15).pack(side="left", padx=10)
 
+    # ────────────────────────────────────────────────────────────────
+    # Vector-store selector
+    # ────────────────────────────────────────────────────────────────
+    def _create_vector_store_selector(self, parent):
+        vs_frame = tk.Frame(parent, pady=0)
+        vs_frame.pack(fill="x", padx=10, pady=(0, 10))
+
+        tk.Label(vs_frame, text="Vector Store:").pack(side="left")
+
+        self.available_stores = self._discover_vector_stores()
+        if not self.available_stores:           # at least show the current one
+            self.available_stores.append(next(iter(self.learnit_instances)))
+
+        self.selected_store = tk.StringVar(value=self.available_stores[0])
+        self.vs_menu = tk.OptionMenu(
+            vs_frame, self.selected_store, *self.available_stores)
+        self.vs_menu.config(width=25)
+        self.vs_menu.pack(side="left", padx=10)
+
+    def _discover_vector_stores(self) -> list[str]:
+        """Return every <store>.id file found under .vector_store_ids/."""
+        id_dir = LearnIt.VECTOR_ID_DIR
+        id_dir.mkdir(exist_ok=True)
+        return [p.stem for p in id_dir.glob("*.id")]
+
+
     def _create_learning_goal_list(self, parent):
         list_frame = tk.Frame(parent)
         list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
@@ -136,17 +164,24 @@ class LernzieleViewer(tk.Tk):
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
     def open_pagefinder(self):
+        
         query = self.current_text
-        pages_dir = "/Users/robing/Desktop/projects/Learnit/PDF_pages/M10_komplett"
+        store_name = self.selected_store.get().strip()
+        if not store_name:
+            messagebox.showwarning("PageFinder",
+                                   "Bitte zuerst einen Vector Store auswählen.")
+            return
+
+        # get (or lazily create) the LearnIt helper for this store
+        li = self.learnit_instances.get(store_name)
+        if li is None:
+            li = LearnIt(store_name)
+            self.learnit_instances[store_name] = li
         dest_dir = os.path.join(self.current_outdir,
         sanitize_dirname(self.current_text))
 
         # Copy **all** cited pages into a new <pdf>_v* folder
-        copied = self.learnit.search_and_copy_pages(
-            query=query,
-            pages_dir=pages_dir,
-            dest_dir=dest_dir,
-        )
+        copied = li.search_and_copy_pages(query=query, dest_dir=dest_dir)
 
         if not copied:
             messagebox.showinfo("PageFinder",
