@@ -23,7 +23,7 @@ def slice_and_mkdir(pdf_path):
     return individual_pdfs_dir
 
 if __name__ == "__main__":
-    pdf_path = "/Users/robing/Desktop/projects/Learnit/PDFs/M10_komplett_S1-6.pdf"      # Source PDF
+    pdf_path = "/Users/robing/Desktop/projects/Learnit/PDFs/test.pdf"      # Source PDF
     individual_pdfs_dir = slice_and_mkdir(pdf_path)
 
     vector_store_name = "Experiment_VS"
