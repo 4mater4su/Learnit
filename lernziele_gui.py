@@ -16,7 +16,7 @@ from pdf_slice_frame import PDFSliceFrame
 from flashcard_review_window import FlashcardReviewWindow
 from flashcard_editor import FlashcardEditor
 from slice_pdf import slice_pdf
-from a_search_and_copy_page import search_and_copy_page
+from learnit import LearnIt
 
 def sanitize_dirname(name):
     # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
@@ -24,8 +24,9 @@ def sanitize_dirname(name):
     return sanitized[:100]
 
 class LernzieleViewer(tk.Tk):
-    def __init__(self):
+    def __init__(self, learnit: LearnIt):
         super().__init__()
+        self.learnit = learnit
         self.title("Lernziele Viewer")
         self.geometry("800x800")
         self.default_outdir = "archive"
@@ -134,12 +135,22 @@ class LernzieleViewer(tk.Tk):
         v_scroll.config(command=self.listbox.yview)
         self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
-    # TODO
     def open_pagefinder(self):
         query = self.current_text
-        individual_pdfs_dir = "/Users/robing/Desktop/projects/Learnit/PDF_pages/M10_komplett"
-        learning_goal_dir = os.path.join(self.current_outdir, sanitize_dirname(self.current_text))
-        search_and_copy_page(query, individual_pdfs_dir, learning_goal_dir)
+        pages_dir = "/Users/robing/Desktop/projects/Learnit/PDF_pages/M10_komplett"
+        dest_dir = os.path.join(self.current_outdir,
+        sanitize_dirname(self.current_text))
+
+        # Use LearnIt’s semantic search + copy helper
+        copied = self.learnit.search_and_copy_page(
+            query=query,
+            pages_dir=pages_dir,
+            dest_dir=dest_dir,
+        )
+
+        if copied is None:
+            messagebox.showinfo("PageFinder",
+                                "Keine passende Seite im PDF-Archiv gefunden.")
         
         self.goal_file_manager.update_filelist()
         self.flashcard_manager_frame.update_pdf_list()
@@ -248,4 +259,9 @@ class LernzieleViewer(tk.Tk):
         FlashcardEditor(self, json_path, refresh_all_goal_colors=self.refresh_all_goal_colors)
 
 if __name__=='__main__':
-    app=LernzieleViewer(); app.mainloop()
+    PDF = "/Users/robing/Desktop/projects/Learnit/PDFs/M10_komplett.pdf"
+
+    li = LearnIt.from_pdf(PDF)      # store “M10_komplett_VS”
+
+    app = LernzieleViewer(learnit=li)
+    app.mainloop()
