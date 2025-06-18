@@ -86,13 +86,21 @@ class LearnIt:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
 
+        print(f"Slicing PDF: {pdf_path.name}")
         reader = PdfReader(str(pdf_path))
+        total_pages = len(reader.pages)
+        print(f" → Total pages: {total_pages}")
+        print(f" → Output directory: {out_dir}")
+
         for i, page in enumerate(reader.pages, start=1):
             out_file = out_dir / f"{pdf_path.stem}_page_{i}.pdf"
             writer = PdfWriter()
             writer.add_page(page)
             with out_file.open("wb") as fh:
                 writer.write(fh)
+            print(f"   ✓ Saved page {i} as {out_file.name}")
+
+        print(f"✓ Done slicing '{pdf_path.name}' into {total_pages} single-page PDFs.\n")
         return out_dir
 
     # 2) ingest directory -----------------------------------------------------
@@ -106,8 +114,12 @@ class LearnIt:
         )
         if not pdfs:
             raise FileNotFoundError(f"No PDFs found in {pages_dir!s}")
+        
+        print(f"Ingesting {len(pdfs)} PDFs from: {pages_dir}")
+        print(f" → Target vector store: {self.store_name} ({self.vector_store_id})")
 
-        for pdf in pdfs:
+        for i, pdf in enumerate(pdfs, start=1):
+            print(f"   [{i}/{len(pdfs)}] Uploading: {pdf.name} ... ", end="", flush=True)
             with pdf.open("rb") as fh:
                 file_obj = self.client.files.create(file=fh, purpose="user_data")
             page_id = "".join(filter(str.isdigit, pdf.stem)) or pdf.stem
@@ -116,6 +128,9 @@ class LearnIt:
                 file_id=file_obj.id,
                 attributes={"page": page_id},
             )
+            print("✓ done")
+
+        print(f"✓ All {len(pdfs)} pages successfully ingested into '{self.store_name}'.\n")
 
     # 3) semantic search + copy ----------------------------------------------
 
@@ -128,6 +143,10 @@ class LearnIt:
     ) -> List[Path]:
         """Run *query* through file-search and copy all cited PDFs directly
         into *dest_dir*, ensuring no duplicates. Returns list of newly copied Paths."""
+
+        print(f"🔍 Searching for: \"{query}\"")
+        print(f" → Using vector store: {self.store_name} ({self.vector_store_id})")
+
         # 1. Perform semantic file search
         resp = self.client.responses.create(
             model="gpt-4o-mini",
@@ -136,7 +155,10 @@ class LearnIt:
         )
         cited = self._extract_citations(resp)
         if not cited:
+            print("⚠️  No files cited in search result.\n")
             return []
+
+        print(f" → Total citations found: {len(cited)}")
 
         # 2. Deduplicate citations by filename (preserve order)
         seen_files = set()
@@ -145,6 +167,8 @@ class LearnIt:
             if filename not in seen_files:
                 seen_files.add(filename)
                 unique_cited.append((filename, file_id))
+
+        print(f" → Unique files to copy: {len(unique_cited)}")
 
         # 3. Ensure destination directory exists
         target = Path(dest_dir).expanduser()
@@ -163,6 +187,7 @@ class LearnIt:
             copied.append(dst)
 
         # 5. Print summary to console
+        print()
         if copied:
             print("Copied pages:", ", ".join(p.name for p in copied))
         else:
