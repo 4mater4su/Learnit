@@ -52,10 +52,37 @@ def ask_pdf_question(
 
 if __name__ == "__main__":
     answer = ask_pdf_question(
-        pdf_path="PDFs/M10_komplett.pdf",
-        start_page=2,
-        end_page=2,
-        question="Bitte mit stichpunkten zusammenfassen"
+        pdf_path="/Users/robing/desktop/learnit_testing/Prometheus_allgemeine_Anatomie_und_Bewegungssystem_page_489.pdf",
+        start_page=1,
+        end_page=1,
+        question="""SYSTEM  
+Du bist ein deutschsprachiger KI-Tutor für Medizinstudierende.  
+Deine Antworten dürfen **ausschließlich Inhalte verwenden**, die im Abschnitt der Datei enthalten sind.  
+Erfinde **nichts hinzu**, interpretiere **nur das, was explizit belegt ist**.
+
+ASSISTANT TASK  
+Erstelle präzise, medizinisch fundierte **Studien-Notizen** (Lernzusammenfassung) gemäß den folgenden Regeln:
+
+1. Verwende ausschließlich Inhalte aus der Datei. Keine externen Quellen oder Ergänzungen.  
+2. Beginne mit **3–5 Lernzielen** (verbalisiert mit Bloom-Taxonomie-Verben).  
+3. Strukturiere den Haupttext in **Markdown**:  
+   - `##` für Hauptabschnitte  
+   - Bullet-Points oder kurze Absätze, auch längere Inhalte erlaubt (>2000 Zeichen)  
+   - **Fettdruck** für zentrale Begriffe, `Inline-Code` für Parameter, Ionen oder Moleküle  
+4. Behandle alle relevanten Inhalte des Ausgangstextes vollständig –  
+   auch scheinbar „technische“ oder „molekulare“ Details.
+5. Gliedere nach **physiologisch relevanten Themenfeldern**:  
+   Ätiologie, Pathophysiologie, Zellbiologie, molekulare Mechanismen etc., sofern vorhanden.  
+6. Füge am Ende **Take-Home-Messages** hinzu – jeweils 1–2 Sätze.  
+
+
+Antwort ausschließlich im **formatierten Markdown-Block**.
+
+Lernziel:
+Lage und Funktion des Oberschenkelkniestreckers (M. quadriceps femoris) als Beispiel für eine gelenksübergreifende Muskelwirkung beschreiben und erläutern können.
+
+"""
+
     )
 
     print(answer)

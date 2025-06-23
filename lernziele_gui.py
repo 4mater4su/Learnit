@@ -18,6 +18,8 @@ from flashcard_editor import FlashcardEditor
 from slice_pdf import slice_pdf
 from learnit import LearnIt
 
+from openai import OpenAI
+
 def sanitize_dirname(name):
     # Keep letters, numbers, dash/underscore. Replace spaces with underscores.
     sanitized = re.sub(r'[^A-Za-z0-9_\-]', '_', name.replace(' ', '_'))

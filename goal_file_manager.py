@@ -3,6 +3,9 @@ from tkinter import messagebox, filedialog
 import os
 import shutil
 import sys
+from openai import OpenAI
+
+from file_selection_frame import DirectoryFileSelectionFrame
 
 class GoalFileManagerFrame(tk.LabelFrame):
     def __init__(self, parent, goal_getter, outdir_getter, sanitize_dirname, refresh_all_goal_colors, **kwargs):
@@ -28,50 +31,205 @@ class GoalFileManagerFrame(tk.LabelFrame):
         self.adddoc_btn = tk.Button(btn_row, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
         self.adddoc_btn.pack(side="left", padx=4)
 
+        # ⬇︎ NEU: Frame für die Dateiauswahl
+        self.file_selector = DirectoryFileSelectionFrame(
+            self,
+            dir_getter=lambda: os.path.join(
+                outdir_getter(),
+                sanitize_dirname(goal_getter() or "")),
+        )
+        self.file_selector.pack(fill="x", padx=4, pady=(4, 6))
+
         self.llm_btn = tk.Button(btn_row, text="LLM-Antwort", command=self.generate_llm_response, state="disabled")
         self.llm_btn.pack(side="left", padx=4)
 
         self.refresh_all_goal_colors = refresh_all_goal_colors
 
+    # def generate_llm_response(self):
+    #     """Erstellt Studien-Notizen auf Basis der angehakten Dateien."""
+    #     goal = self.goal_getter()
+    #     if not goal:
+    #         messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
+    #         return
+
+    #     dirname   = self.sanitize_dirname(goal)
+    #     outdir    = self.outdir_getter()
+    #     targetdir = os.path.join(outdir, dirname)
+    #     os.makedirs(targetdir, exist_ok=True)
+
+    #     # ------------------------------------------------------------------ #
+    #     # 1) Angekreuzte Dateien einsammeln
+    #     # ------------------------------------------------------------------ #
+    #     selected_files = self.file_selector.get_selected_files()
+
+    #     retriever_output = ""
+    #     for path in selected_files:
+    #         try:
+    #             with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+    #                 retriever_output += (
+    #                     f"\n\n### Inhalt von {os.path.basename(path)} ###\n"
+    #                     + fh.read()
+    #                 )
+    #         except Exception as e:
+    #             messagebox.showwarning(
+    #                 "Dateifehler",
+    #                 f"{os.path.basename(path)} konnte nicht gelesen werden:\n{e}",
+    #             )
+
+    #     # Wenn keine Datei gewählt wurde, trotzdem ein Platzhalter – sonst Abort
+    #     if not retriever_output.strip():
+    #         retriever_output = "(kein Text gefunden)"
+
+    #     # ------------------------------------------------------------------ #
+    #     # 2) Prompt nach Vorgabe aufbauen
+    #     # ------------------------------------------------------------------ #
+    #     messages = [
+    #         {
+    #             "role": "system",
+    #             "content": (
+    #                 "Du bist ein deutschsprachiger KI-Tutor für Medizinstudierende.\n"
+    #                 "Deine Antworten dürfen **ausschließlich Inhalte verwenden**, "
+    #                 "die im Abschnitt {retriever_output} enthalten sind.\n"
+    #                 "Erfinde **nichts hinzu**, interpretiere **nur das, "
+    #                 "was explizit belegt ist**."
+    #             ),
+    #         },
+    #         {
+    #             "role": "user",
+    #             "content": retriever_output,
+    #         },
+    #         {
+    #             "role": "assistant",
+    #             "content": (
+    #                 "Erstelle präzise, medizinisch fundierte **Studien-Notizen** "
+    #                 "(Lernzusammenfassung) gemäß den folgenden Regeln:\n\n"
+    #                 "1. Verwende ausschließlich Inhalte aus {retriever_output}. "
+    #                 "Keine externen Quellen oder Ergänzungen.\n"
+    #                 "2. Beginne mit **3–5 Lernzielen** "
+    #                 "(verbalisiert mit Bloom-Taxonomie-Verben).\n"
+    #                 "3. Strukturiere den Haupttext in **Markdown**:\n"
+    #                 "   - `##` für Hauptabschnitte\n"
+    #                 "   - Bullet-Points oder kurze Absätze, auch längere Inhalte erlaubt (>2000 Zeichen)\n"
+    #                 "   - **Fettdruck** für zentrale Begriffe, `Inline-Code` für Parameter, Ionen oder Moleküle\n"
+    #                 "4. Behandle alle relevanten Inhalte des Ausgangstextes vollständig – "
+    #                 "auch scheinbar „technische“ oder „molekulare“ Details.\n"
+    #                 "5. Gliedere nach **physiologisch relevanten Themenfeldern**: "
+    #                 "Ätiologie, Pathophysiologie, Zellbiologie, molekulare Mechanismen etc., sofern vorhanden.\n"
+    #                 "6. Füge am Ende **Take-Home-Messages** hinzu – jeweils 1–2 Sätze.\n\n"
+    #                 "Antwort ausschließlich im **formatierten Markdown-Block**."
+    #             ),
+    #         },
+    #     ]
+
+    #     # ------------------------------------------------------------------ #
+    #     # 3) LLM-Aufruf
+    #     # ------------------------------------------------------------------ #
+    #     try:
+    #         client = OpenAI()
+    #         response = client.responses.create(
+    #             model="gpt-4o-mini",
+    #             messages=messages,
+    #             temperature=0.4,
+    #         )
+    #         markdown_notes = response.choices[0].message.content.strip()
+
+    #         # Ergebnis speichern
+    #         with open(os.path.join(targetdir, "LLM.md"), "w", encoding="utf-8") as f:
+    #             f.write(markdown_notes)
+
+    #         self.update_filelist()
+    #         self.refresh_all_goal_colors()
+    #     except Exception as e:
+    #         messagebox.showerror("Fehler", f"LLM-Anfrage fehlgeschlagen:\n{e}")
+
     
     def generate_llm_response(self):
-        """Generate a medical-school-level explanation of the learning goal via the new OpenAI SDK (v1)."""
+        """Erstellt Studien-Notizen, indem alle selektierten Dateien als File-Input an OpenAI gesendet werden."""
         goal = self.goal_getter()
         if not goal:
             messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
             return
 
+        # ----------------------------------------------------------- #
+        # Pfade vorbereiten
         dirname   = self.sanitize_dirname(goal)
         outdir    = self.outdir_getter()
         targetdir = os.path.join(outdir, dirname)
         os.makedirs(targetdir, exist_ok=True)
 
+        # ----------------------------------------------------------- #
+        # Dateien sammeln & hochladen
+        selected_files = self.file_selector.get_selected_files()
+        if not selected_files:
+            messagebox.showwarning("Hinweis", "Keine Datei ausgewählt – es wird nur das Lernziel gesendet.")
+        
+        client = OpenAI()
+        file_blocks = []                          # wird gleich in die 'content'-Liste geschrieben
+
+        for path in selected_files:
+            try:
+                with open(path, "rb") as fh:
+                    uploaded = client.files.create(file=fh, purpose="user_data")
+                file_blocks.append({"type": "input_file", "file_id": uploaded.id})
+            except Exception as e:
+                messagebox.showwarning(
+                    "Upload-Fehler",
+                    f"{os.path.basename(path)} konnte nicht hochgeladen werden:\n{e}"
+                )
+
+        # ----------------------------------------------------------- #
+        # Prompt-Text gemäß Vorgabe
+        prompt_text = f"""SYSTEM  
+    Du bist ein deutschsprachiger KI-Tutor für Medizinstudierende.  
+    Deine Antworten dürfen **ausschließlich Inhalte verwenden**, die im Abschnitt der Datei enthalten sind.  
+    Erfinde **nichts hinzu**, interpretiere **nur das, was explizit belegt ist**.
+
+    ASSISTANT TASK  
+    Erstelle präzise, medizinisch fundierte **Studien-Notizen** (Lernzusammenfassung) gemäß den folgenden Regeln:
+
+    1. Verwende ausschließlich Inhalte aus der Datei. Keine externen Quellen oder Ergänzungen.  
+    2. Beginne mit **3–5 Lernzielen** (verbalisiert mit Bloom-Taxonomie-Verben).  
+    3. Strukturiere den Haupttext in **Markdown**:  
+    - `##` für Hauptabschnitte  
+    - Bullet-Points oder kurze Absätze, auch längere Inhalte erlaubt (>2000 Zeichen)  
+    - **Fettdruck** für zentrale Begriffe, `Inline-Code` für Parameter, Ionen oder Moleküle  
+    4. Behandle alle relevanten Inhalte des Ausgangstextes vollständig –  
+    auch scheinbar „technische“ oder „molekulare“ Details.  
+    5. Gliedere nach **physiologisch relevanten Themenfeldern**:  
+    Ätiologie, Pathophysiologie, Zellbiologie, molekulare Mechanismen etc., sofern vorhanden.  
+    6. Füge am Ende **Take-Home-Messages** hinzu – jeweils 1–2 Sätze.  
+
+    Antwort ausschließlich im **formatierten Markdown-Block**.
+
+    Lernziel:
+    {goal}
+    """
+
+        # ----------------------------------------------------------- #
+        # Responses-Endpoint aufrufen  (Datei-Input wird unterstützt)
         try:
-            # --- NEW OpenAI v1 style ---
-            from openai import OpenAI
-            client = OpenAI()
-
-            prompt = (
-                "You are an expert medical educator.\n\n"
-                f"Please provide a detailed medical-school-level explanation of the "
-                f"following learning goal:\n\n{goal}"
+            response = client.responses.create(
+                model="gpt-4.1",
+                input=[
+                    {
+                        "role": "user",
+                        # Kombiniere File-Blöcke + den eigentlichen Prompt-Text
+                        "content": file_blocks + [{"type": "input_text", "text": prompt_text}]
+                    }
+                ]
             )
+            markdown_notes = response.output_text.strip()
 
-            resp = client.responses.create(
-                model="gpt-4o-mini",      # or "gpt-4.1" if that’s your preferred model
-                input=prompt
-            )
-            text = resp.output_text
-            # --------------------------------
-
-            # save to TXT
-            filename = f"LLM.txt"
-            path = os.path.join(targetdir, filename)
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(text)
+            # ------------------------------------------------------- #
+            # Ergebnis speichern
+            out_file = os.path.join(targetdir, "LLM.txt")
+            with open(out_file, "w", encoding="utf-8") as f:
+                f.write(markdown_notes)
 
             self.update_filelist()
             self.refresh_all_goal_colors()
+            messagebox.showinfo("Fertig", f"Studien-Notizen gespeichert unter:\n{out_file}")
+
         except Exception as e:
             messagebox.showerror("Fehler", f"LLM-Anfrage fehlgeschlagen:\n{e}")
 
@@ -109,6 +267,8 @@ class GoalFileManagerFrame(tk.LabelFrame):
         self.copy_btn.config(state="normal")
         self.adddoc_btn.config(state="normal")
         self.llm_btn.config(state="normal")
+
+        self.file_selector.refresh()   # muss aufgerufen werden, sobald sich das Zielverzeichnis ändert oder neue Dateien hinzukommen.
 
     def copy_to_clipboard(self):
         goal = self.goal_getter()

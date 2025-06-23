@@ -151,7 +151,12 @@ class LearnIt:
         resp = self.client.responses.create(
             model="gpt-4o-mini",
             input=query,
-            tools=[{"type": "file_search", "vector_store_ids": [self.vector_store_id]}],
+            tools=[{
+                "type": "file_search",
+                "vector_store_ids": [self.vector_store_id],
+                "max_num_results": 12
+            }]
+
         )
         cited = self._extract_citations(resp)
         if not cited:

@@ -134,7 +134,7 @@ class OneShotFlashcardGenerator(FlashcardGenerator, ABC):
             file_obj = CLIENT.files.create(file=fh, purpose="user_data")
 
         resp = CLIENT.responses.parse(
-            model="gpt-4o-mini",
+            model="gpt-4.1",
             input=[
                 {
                     "role": "user",
