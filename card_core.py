@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-flashcard_manager.py
+card_core.py
 
 """
 

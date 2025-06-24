@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-flashcard_generation.py
+card_create.py
 
 Pluggable flash-card generation back-ends for PDF **and plain-text** pipelines.
 

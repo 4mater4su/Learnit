@@ -1,3 +1,7 @@
+"""
+card_manager_frame.py
+"""
+
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import os
@@ -99,6 +103,24 @@ class FlashcardManagerFrame(tk.LabelFrame):
         self.edit_btn.pack(side="left", padx=4)
 
         self.pdf_checkboxes: dict[str, tk.BooleanVar] = {}
+
+    # ─────────────────────────────────────────────────────────
+    def get_selected_files(self) -> list[str]:
+        """
+        Return absolute paths of all .pdf/.txt files whose check-box is ticked.
+        """
+        goal = self.get_current_goal()
+        if not goal:
+            return []
+        goal_dir = os.path.join(self.get_outdir(),
+                                self.sanitize_dirname(goal))
+        return [
+            os.path.join(goal_dir, fname)
+            for fname, var in self.pdf_checkboxes.items()
+            if var.get()
+        ]
+    # ─────────────────────────────────────────────────────────
+
 
     # -------------------------------------------------------------------------#
     # Helper UI utilities

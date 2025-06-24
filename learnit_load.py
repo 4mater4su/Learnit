@@ -1,3 +1,7 @@
+"""
+learnit_load.py
+"""
+
 from learnit import LearnIt
 
 PATH_TO_PDF = "/Users/robing/Desktop/projects/Learnit/PDFs/Duale_Reihe_Biochemie.pdf"

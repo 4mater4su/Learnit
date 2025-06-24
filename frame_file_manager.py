@@ -1,3 +1,7 @@
+"""
+frame_file_manager.py
+"""
+
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import os
@@ -5,14 +9,15 @@ import shutil
 import sys
 from openai import OpenAI
 
-from frame_file_chooser import DirectoryFileSelectionFrame
+#from frame_file_chooser import DirectoryFileSelectionFrame
 
 class GoalFileManagerFrame(tk.LabelFrame):
-    def __init__(self, parent, goal_getter, outdir_getter, sanitize_dirname, refresh_all_goal_colors, **kwargs):
+    def __init__(self, parent, goal_getter, outdir_getter, sanitize_dirname, refresh_all_goal_colors, selected_files_getter, **kwargs):
         super().__init__(parent, text="Ausgewähltes Lernziel", **kwargs)
         self.goal_getter = goal_getter            # Function to get current goal text
         self.outdir_getter = outdir_getter        # Function to get output directory
         self.sanitize_dirname = sanitize_dirname  # Function to sanitize goal text
+        self.selected_files_getter = selected_files_getter 
 
         self.filelist_label = tk.Label(self, text="Dateien im Verzeichnis:", anchor="w")
         self.filelist_label.pack(fill="x", padx=4, pady=(2,0))
@@ -23,127 +28,79 @@ class GoalFileManagerFrame(tk.LabelFrame):
         self.filelist_box.bind('<Button-2>', self.show_file_context_menu)
 
         btn_row = tk.Frame(self)
-        btn_row.pack(anchor="center", pady=5)
+        btn_row.pack(fill="x", pady=(0, 6))
 
-        self.copy_btn = tk.Button(btn_row, text="Kopieren", command=self.copy_to_clipboard, state="disabled")
-        self.copy_btn.pack(side="left", padx=4)
+        self.copy_btn   = tk.Button(btn_row, text="Dateien kopieren", command=self.copy_files)
+        self.adddoc_btn = tk.Button(btn_row, text="Dokument hinzufügen", command=self.add_doc)
+        self.llm_btn    = tk.Button(btn_row, text="LLM fragen…", command=self.ask_llm)
 
-        self.adddoc_btn = tk.Button(btn_row, text="Dokument hinzufügen", command=self.add_document_to_goal, state="disabled")
-        self.adddoc_btn.pack(side="left", padx=4)
+        for b in (self.copy_btn, self.adddoc_btn, self.llm_btn):
+            b.pack(side="left", padx=4)
+            b.config(state="disabled")          # erst mal deaktiviert
 
         # ⬇︎ NEU: Frame für die Dateiauswahl
-        self.file_selector = DirectoryFileSelectionFrame(
-            self,
-            dir_getter=lambda: os.path.join(
-                outdir_getter(),
-                sanitize_dirname(goal_getter() or "")),
-        )
-        self.file_selector.pack(fill="x", padx=4, pady=(4, 6))
+        # self.file_selector = DirectoryFileSelectionFrame(
+        #     self,
+        #     dir_getter=lambda: os.path.join(
+        #         outdir_getter(),
+        #         sanitize_dirname(goal_getter() or "")),
+        # )
+        # self.file_selector.pack(fill="x", padx=4, pady=(4, 6))
 
-        self.llm_btn = tk.Button(btn_row, text="LLM-Antwort", command=self.generate_llm_response, state="disabled")
-        self.llm_btn.pack(side="left", padx=4)
+        # self.llm_btn = tk.Button(btn_row, text="LLM-Antwort", command=self.generate_llm_response, state="disabled")
+        # self.llm_btn.pack(side="left", padx=4)
 
-        self.refresh_all_goal_colors = refresh_all_goal_colors
+        # self.refresh_all_goal_colors = refresh_all_goal_colors
 
-    # def generate_llm_response(self):
-    #     """Erstellt Studien-Notizen auf Basis der angehakten Dateien."""
-    #     goal = self.goal_getter()
-    #     if not goal:
-    #         messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
-    #         return
+    def copy_files(self):
+        """Kopiert die vom Benutzer angehakten Dateien in ein Zielverzeichnis."""
+        files = self.selected_files_getter()
+        if not files:
+            messagebox.showinfo("Kopieren", "Keine Dateien ausgewählt.")
+            return
 
-    #     dirname   = self.sanitize_dirname(goal)
-    #     outdir    = self.outdir_getter()
-    #     targetdir = os.path.join(outdir, dirname)
-    #     os.makedirs(targetdir, exist_ok=True)
+        dest_dir = filedialog.askdirectory(title="Wohin kopieren?")
+        if not dest_dir:
+            return
 
-    #     # ------------------------------------------------------------------ #
-    #     # 1) Angekreuzte Dateien einsammeln
-    #     # ------------------------------------------------------------------ #
-    #     selected_files = self.file_selector.get_selected_files()
+        import shutil, os, pathlib
+        for src in files:
+            shutil.copy2(src, pathlib.Path(dest_dir) / pathlib.Path(src).name)
 
-    #     retriever_output = ""
-    #     for path in selected_files:
-    #         try:
-    #             with open(path, "r", encoding="utf-8", errors="ignore") as fh:
-    #                 retriever_output += (
-    #                     f"\n\n### Inhalt von {os.path.basename(path)} ###\n"
-    #                     + fh.read()
-    #                 )
-    #         except Exception as e:
-    #             messagebox.showwarning(
-    #                 "Dateifehler",
-    #                 f"{os.path.basename(path)} konnte nicht gelesen werden:\n{e}",
-    #             )
+        messagebox.showinfo("Kopieren", f"{len(files)} Datei(en) kopiert.")
+        self.update_filelist()
 
-    #     # Wenn keine Datei gewählt wurde, trotzdem ein Platzhalter – sonst Abort
-    #     if not retriever_output.strip():
-    #         retriever_output = "(kein Text gefunden)"
+    def add_doc(self):
+        """Lässt den Nutzer eine Datei wählen und legt sie im aktuellen
+        Lernziel-Ordner ab (oder verlinkt sie, je nach Workflow)."""
+        # 1. Zieldir bestimmen
+        goal   = self.goal_getter().strip()
+        if not goal:
+            messagebox.showinfo("Dokument hinzufügen",
+                                "Kein Lernziel ausgewählt.")
+            return
+        goal_dir = os.path.join(self.outdir_getter(),
+                                self.sanitize_dirname(goal))
+        os.makedirs(goal_dir, exist_ok=True)
 
-    #     # ------------------------------------------------------------------ #
-    #     # 2) Prompt nach Vorgabe aufbauen
-    #     # ------------------------------------------------------------------ #
-    #     messages = [
-    #         {
-    #             "role": "system",
-    #             "content": (
-    #                 "Du bist ein deutschsprachiger KI-Tutor für Medizinstudierende.\n"
-    #                 "Deine Antworten dürfen **ausschließlich Inhalte verwenden**, "
-    #                 "die im Abschnitt {retriever_output} enthalten sind.\n"
-    #                 "Erfinde **nichts hinzu**, interpretiere **nur das, "
-    #                 "was explizit belegt ist**."
-    #             ),
-    #         },
-    #         {
-    #             "role": "user",
-    #             "content": retriever_output,
-    #         },
-    #         {
-    #             "role": "assistant",
-    #             "content": (
-    #                 "Erstelle präzise, medizinisch fundierte **Studien-Notizen** "
-    #                 "(Lernzusammenfassung) gemäß den folgenden Regeln:\n\n"
-    #                 "1. Verwende ausschließlich Inhalte aus {retriever_output}. "
-    #                 "Keine externen Quellen oder Ergänzungen.\n"
-    #                 "2. Beginne mit **3–5 Lernzielen** "
-    #                 "(verbalisiert mit Bloom-Taxonomie-Verben).\n"
-    #                 "3. Strukturiere den Haupttext in **Markdown**:\n"
-    #                 "   - `##` für Hauptabschnitte\n"
-    #                 "   - Bullet-Points oder kurze Absätze, auch längere Inhalte erlaubt (>2000 Zeichen)\n"
-    #                 "   - **Fettdruck** für zentrale Begriffe, `Inline-Code` für Parameter, Ionen oder Moleküle\n"
-    #                 "4. Behandle alle relevanten Inhalte des Ausgangstextes vollständig – "
-    #                 "auch scheinbar „technische“ oder „molekulare“ Details.\n"
-    #                 "5. Gliedere nach **physiologisch relevanten Themenfeldern**: "
-    #                 "Ätiologie, Pathophysiologie, Zellbiologie, molekulare Mechanismen etc., sofern vorhanden.\n"
-    #                 "6. Füge am Ende **Take-Home-Messages** hinzu – jeweils 1–2 Sätze.\n\n"
-    #                 "Antwort ausschließlich im **formatierten Markdown-Block**."
-    #             ),
-    #         },
-    #     ]
+        # 2. Datei(en) wählen
+        ftypes = [("PDF-Dateien", "*.pdf"), ("Text-Dateien", "*.txt"),
+                  ("Alle Dateien", "*.*")]
+        paths = filedialog.askopenfilenames(title="Datei(en) auswählen",
+                                            filetypes=ftypes)
+        if not paths:
+            return
 
-    #     # ------------------------------------------------------------------ #
-    #     # 3) LLM-Aufruf
-    #     # ------------------------------------------------------------------ #
-    #     try:
-    #         client = OpenAI()
-    #         response = client.responses.create(
-    #             model="gpt-4o-mini",
-    #             messages=messages,
-    #             temperature=0.4,
-    #         )
-    #         markdown_notes = response.choices[0].message.content.strip()
+        # 3. Kopieren
+        import shutil, pathlib
+        for src in paths:
+            shutil.copy2(src, pathlib.Path(goal_dir) / pathlib.Path(src).name)
 
-    #         # Ergebnis speichern
-    #         with open(os.path.join(targetdir, "LLM.md"), "w", encoding="utf-8") as f:
-    #             f.write(markdown_notes)
+        messagebox.showinfo("Dokument hinzufügen",
+                            f"{len(paths)} Datei(en) hinzugefügt.")
+        self.update_filelist()
 
-    #         self.update_filelist()
-    #         self.refresh_all_goal_colors()
-    #     except Exception as e:
-    #         messagebox.showerror("Fehler", f"LLM-Anfrage fehlgeschlagen:\n{e}")
-
-    
-    def generate_llm_response(self):
+    def ask_llm(self):
         """Erstellt Studien-Notizen, indem alle selektierten Dateien als File-Input an OpenAI gesendet werden."""
         goal = self.goal_getter()
         if not goal:
@@ -159,7 +116,8 @@ class GoalFileManagerFrame(tk.LabelFrame):
 
         # ----------------------------------------------------------- #
         # Dateien sammeln & hochladen
-        selected_files = self.file_selector.get_selected_files()
+        #selected_files = self.file_selector.get_selected_files()
+        selected_files = self.selected_files_getter()
         if not selected_files:
             messagebox.showwarning("Hinweis", "Keine Datei ausgewählt – es wird nur das Lernziel gesendet.")
         
@@ -268,7 +226,7 @@ class GoalFileManagerFrame(tk.LabelFrame):
         self.adddoc_btn.config(state="normal")
         self.llm_btn.config(state="normal")
 
-        self.file_selector.refresh()   # muss aufgerufen werden, sobald sich das Zielverzeichnis ändert oder neue Dateien hinzukommen.
+        #self.file_selector.refresh()   # muss aufgerufen werden, sobald sich das Zielverzeichnis ändert oder neue Dateien hinzukommen.
 
     def copy_to_clipboard(self):
         goal = self.goal_getter()

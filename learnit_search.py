@@ -1,3 +1,7 @@
+"""
+learnit_search.py
+"""
+
 from learnit import LearnIt
 
 #PATH_TO_PDF = "/Users/robing/Desktop/projects/Learnit/PDFs/M10_komplett.pdf"

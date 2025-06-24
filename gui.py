@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+"""
+gui.py
+"""
 
 import os
 import tkinter as tk
@@ -12,10 +14,13 @@ from card_core import (
 )
 from card_manager_frame import FlashcardManagerFrame
 from frame_file_manager import GoalFileManagerFrame
-from frame_pdf_slice import PDFSliceFrame
+
+# from frame_pdf_slice import PDFSliceFrame
+# from utils.slice_pdf import slice_pdf
+
 from card_review_frame import FlashcardReviewWindow
 from card_editor_frame import FlashcardEditor
-from utils.slice_pdf import slice_pdf
+
 from learnit import LearnIt
 
 from openai import OpenAI
@@ -59,28 +64,6 @@ class LernzieleViewer(tk.Tk):
         )
         self.pagefinder_btn.pack(pady=(0, 10))
 
-        # --- Goal File Manager ---
-        self.goal_file_manager = GoalFileManagerFrame(
-            self.scrollable_frame,
-            goal_getter=lambda: self.current_text,
-            outdir_getter=lambda: self.current_outdir,
-            sanitize_dirname=sanitize_dirname,
-            refresh_all_goal_colors=self.refresh_all_goal_colors
-        )
-        self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
-
-        # --- PDF Slice Frame ---
-        self.pdf_slice_frame = PDFSliceFrame(
-            self.scrollable_frame,
-            get_current_goal=lambda: self.current_text,
-            get_outdir=lambda: self.current_outdir,
-            sanitize_dirname=sanitize_dirname,
-            update_callback=lambda: [self.goal_file_manager.update_filelist(), self.flashcard_manager_frame.update_pdf_list()],
-            slice_pdf_func=slice_pdf, 
-            refresh_all_goal_colors=self.refresh_all_goal_colors
-        )
-        self.pdf_slice_frame.pack(fill="x", padx=10, pady=(0, 10))
-
         # --- Flashcard Manager Frame ---
         self.flashcard_manager_frame = FlashcardManagerFrame(
             self.scrollable_frame,
@@ -93,6 +76,29 @@ class LernzieleViewer(tk.Tk):
             refresh_all_goal_colors=self.refresh_all_goal_colors
         )
         self.flashcard_manager_frame.pack(fill="x", padx=10, pady=(0, 10))
+
+        # --- Goal File Manager ---
+        self.goal_file_manager = GoalFileManagerFrame(
+            self.scrollable_frame,
+            goal_getter=lambda: self.current_text,
+            outdir_getter=lambda: self.current_outdir,
+            sanitize_dirname=sanitize_dirname,
+            refresh_all_goal_colors=self.refresh_all_goal_colors,
+            selected_files_getter = self.flashcard_manager_frame.get_selected_files
+        )
+        self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
+
+        # --- PDF Slice Frame ---
+        # self.pdf_slice_frame = PDFSliceFrame(
+        #     self.scrollable_frame,
+        #     get_current_goal=lambda: self.current_text,
+        #     get_outdir=lambda: self.current_outdir,
+        #     sanitize_dirname=sanitize_dirname,
+        #     update_callback=lambda: [self.goal_file_manager.update_filelist(), self.flashcard_manager_frame.update_pdf_list()],
+        #     slice_pdf_func=slice_pdf, 
+        #     refresh_all_goal_colors=self.refresh_all_goal_colors
+        # )
+        # self.pdf_slice_frame.pack(fill="x", padx=10, pady=(0, 10))
 
     def _create_scrollable_area(self):
         # Create a scrollable frame inside a canvas with a vertical scrollbar
@@ -237,7 +243,7 @@ class LernzieleViewer(tk.Tk):
         self.title(f"Lernziele Viewer — {os.path.basename(path)}")
 
         self.flashcard_manager_frame.set_action_buttons_state("disabled")
-        self.pdf_slice_frame.set_slice_button_state("disabled")
+        #self.pdf_slice_frame.set_slice_button_state("disabled")
         self.goal_file_manager.copy_btn.config(state="disabled")
         self.goal_file_manager.adddoc_btn.config(state="disabled")
 
@@ -250,7 +256,7 @@ class LernzieleViewer(tk.Tk):
         sel = self.listbox.curselection()
         if not sel:
             self.flashcard_manager_frame.set_action_buttons_state("disabled")
-            self.pdf_slice_frame.set_slice_button_state("disabled")
+            #self.pdf_slice_frame.set_slice_button_state("disabled")
             self.goal_file_manager.update_filelist()
             return
         idx = sel[0]
@@ -263,7 +269,7 @@ class LernzieleViewer(tk.Tk):
         self.details_text.config(state="disabled")
 
         self.flashcard_manager_frame.set_action_buttons_state("normal")
-        self.pdf_slice_frame.set_slice_button_state("normal")
+        #self.pdf_slice_frame.set_slice_button_state("normal")
         # Let the GoalFileManager decide what to enable/disable
         self.goal_file_manager.update_filelist()
 
