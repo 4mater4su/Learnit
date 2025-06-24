@@ -79,7 +79,7 @@ class LearnIt:
     # 1) slice PDF ------------------------------------------------------------
 
     def slice_pdf(self, pdf_path: str | Path, *, out_dir: Path | str | None = None) -> Path:
-        """Split *pdf_path* into single‑page PDFs and return the output directory."""
+        """Split *pdf_path* into single-page PDFs and return the output directory."""
         pdf_path = Path(pdf_path)
         if out_dir is None:
             out_dir = self.pages_root / pdf_path.stem
@@ -87,7 +87,8 @@ class LearnIt:
         out_dir.mkdir(parents=True, exist_ok=True)
 
         print(f"Slicing PDF: {pdf_path.name}")
-        reader = PdfReader(str(pdf_path))
+        # allow undefined objects, to avoid clone errors on malformed PDFs
+        reader = PdfReader(str(pdf_path), strict=False)
         total_pages = len(reader.pages)
         print(f" → Total pages: {total_pages}")
         print(f" → Output directory: {out_dir}")
@@ -95,7 +96,12 @@ class LearnIt:
         for i, page in enumerate(reader.pages, start=1):
             out_file = out_dir / f"{pdf_path.stem}_page_{i}.pdf"
             writer = PdfWriter()
-            writer.add_page(page)
+            try:
+                writer.add_page(page)
+            except AssertionError:
+                print(f"⚠️  Skipping page {i} (undefined object) in {pdf_path.name}")
+                continue
+
             with out_file.open("wb") as fh:
                 writer.write(fh)
             print(f"   ✓ Saved page {i} as {out_file.name}")
