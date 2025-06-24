@@ -5,17 +5,17 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import re
 
-from excel_parser import load_data
-from flashcard_core import (
+from utils.excel_parser import load_data
+from card_core import (
     load_flashcard_data,
     update_progress,
 )
-from flashcard_manager_frame import FlashcardManagerFrame
-from goal_file_manager import GoalFileManagerFrame
-from pdf_slice_frame import PDFSliceFrame
-from flashcard_review_window import FlashcardReviewWindow
-from flashcard_editor import FlashcardEditor
-from slice_pdf import slice_pdf
+from card_manager_frame import FlashcardManagerFrame
+from frame_file_manager import GoalFileManagerFrame
+from frame_pdf_slice import PDFSliceFrame
+from card_review_frame import FlashcardReviewWindow
+from card_editor_frame import FlashcardEditor
+from utils.slice_pdf import slice_pdf
 from learnit import LearnIt
 
 from openai import OpenAI

@@ -5,7 +5,7 @@ import shutil
 import sys
 from openai import OpenAI
 
-from file_selection_frame import DirectoryFileSelectionFrame
+from frame_file_chooser import DirectoryFileSelectionFrame
 
 class GoalFileManagerFrame(tk.LabelFrame):
     def __init__(self, parent, goal_getter, outdir_getter, sanitize_dirname, refresh_all_goal_colors, **kwargs):

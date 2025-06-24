@@ -1,8 +1,8 @@
 # a_slice_and_ingest.py
 import os
 from PyPDF2 import PdfReader
-from a_ingest_directory import ingest_directory
-from slice_pdf import slice_pdf
+from vector_store_testing.a_ingest_directory import ingest_directory
+from utils.slice_pdf import slice_pdf
 
 def slice_and_mkdir(pdf_path):
     pdf_name = os.path.basename(pdf_path)             # "test.pdf"

@@ -5,11 +5,11 @@ from tkinter import filedialog, messagebox, simpledialog
 from typing import List, Dict, Any
 from PyPDF2 import PdfReader
 
-from flashcard_core import remove_card_progress, remove_batch_progress
+from card_core import remove_card_progress, remove_batch_progress
 
 try:
     # Re‑use the global OpenAI() instance from flashcard_manager if available
-    from flashcard_core import OpenAI as _FMOpenAI  # type: ignore
+    from card_core import OpenAI as _FMOpenAI  # type: ignore
     CLIENT = _FMOpenAI()
 except Exception:  # pragma: no cover – standalone fallback
     from openai import OpenAI
@@ -173,7 +173,7 @@ class FlashcardEditor(tk.Toplevel):
             del self.flashcards[self.selected_index]
             # Remove progress for this card
             batch_key = f"{self.batch.get('learning_goal','')} (Seiten {self.batch.get('page_range','')})"
-            from flashcard_core import remove_card_progress
+            from card_core import remove_card_progress
             remove_card_progress(batch_key, card["question"])
             self._populate_listbox()
             if self.flashcards:

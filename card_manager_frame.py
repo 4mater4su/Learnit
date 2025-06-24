@@ -3,7 +3,7 @@ from tkinter import messagebox, filedialog
 import os
 from PyPDF2 import PdfReader
 
-from flashcard_generation import (
+from card_create import (
     ChainedFlashcardGenerator,
     OneShotFlashcardGenerator,
     FlashcardGenerator

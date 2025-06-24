@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 from openai import OpenAI
 from pydantic import BaseModel
 
-from slice_pdf import slice_pdf
+from utils.slice_pdf import slice_pdf
 
 # --------------------------------------------------------------------------- #
 #  Configuration / globals
