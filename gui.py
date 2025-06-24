@@ -3,9 +3,6 @@ gui.py
 """
 
 """
-Align script name with class/function names
-
-fix delete/regenerate cards
 
 scale page find
 
@@ -21,14 +18,14 @@ from card_core import (
     load_flashcard_data,
     update_progress,
 )
-from card_manager_frame import FlashcardManagerFrame
-from frame_file_manager import GoalFileManagerFrame
+from card_manager_frame import card_manager_frame
+from frame_dir_manager import frame_dir_manager
 
 # from frame_pdf_slice import PDFSliceFrame
 # from utils.slice_pdf import slice_pdf
 
-from card_review_frame import FlashcardReviewWindow
-from card_editor_frame import FlashcardEditor
+from card_review_frame import card_review_frame
+from card_editor_frame import card_editor_frame
 
 from learnit import LearnIt
 
@@ -41,13 +38,13 @@ def sanitize_dirname(name):
     return sanitized[:100]
 
 
-class LernzieleViewer(tk.Tk):
+class Gui(tk.Tk):
     def __init__(self, learnit: LearnIt):
         super().__init__()
         self.learnit = learnit
         self.learnit_instances = {learnit.store_name: learnit}
         self.title("Lernziele Viewer")
-        self.geometry("800x800")
+        self.geometry("800x700")
         self.default_outdir = "archive"
         self.current_outdir = self.default_outdir
         self.lernziele = []
@@ -77,7 +74,7 @@ class LernzieleViewer(tk.Tk):
         self.pagefinder_btn.pack(pady=(0, 10))
 
         # --- Flashcard Manager Frame ---
-        self.flashcard_manager_frame = FlashcardManagerFrame(
+        self.flashcard_manager_frame = card_manager_frame(
             self.main_frame,
             get_current_goal=lambda: self.current_text,
             get_outdir=lambda: self.current_outdir,
@@ -90,7 +87,7 @@ class LernzieleViewer(tk.Tk):
         self.flashcard_manager_frame.pack(fill="x", padx=10, pady=(0, 10))
 
         # --- Goal File Manager (above Flashcard Manager) ---
-        self.goal_file_manager = GoalFileManagerFrame(
+        self.goal_file_manager = frame_dir_manager(
             self.main_frame,
             goal_getter=lambda: self.current_text,
             outdir_getter=lambda: self.current_outdir,
@@ -154,7 +151,7 @@ class LernzieleViewer(tk.Tk):
         v_scroll.pack(side="right", fill="y")
 
         self.listbox = tk.Listbox(
-            list_frame, selectmode="browse", yscrollcommand=v_scroll.set, height=5
+            list_frame, selectmode="browse", yscrollcommand=v_scroll.set, height=10
         )
         self.listbox.pack(fill="x")
         v_scroll.config(command=self.listbox.yview)
@@ -272,12 +269,12 @@ class LernzieleViewer(tk.Tk):
 
     def start_review(self, json_path):
         data = load_flashcard_data(json_path)
-        FlashcardReviewWindow(
+        card_review_frame(
             master=self, data=data, update_progress_callback=update_progress
         )
 
     def edit_current(self, json_path):
-        FlashcardEditor(self, json_path, refresh_all_goal_colors=self.refresh_all_goal_colors)
+        card_editor_frame(self, json_path, refresh_all_goal_colors=self.refresh_all_goal_colors)
 
 
 if __name__ == "__main__":
@@ -285,5 +282,5 @@ if __name__ == "__main__":
 
     li = LearnIt.from_pdf(PDF)  # store “M10_komplett_VS”
 
-    app = LernzieleViewer(learnit=li)
+    app = Gui(learnit=li)
     app.mainloop()

@@ -11,7 +11,7 @@ from openai import OpenAI
 
 #from frame_file_chooser import DirectoryFileSelectionFrame
 
-class GoalFileManagerFrame(tk.LabelFrame):
+class frame_dir_manager(tk.LabelFrame):
     def __init__(self, parent, goal_getter, outdir_getter, sanitize_dirname, refresh_all_goal_colors, selected_files_getter, **kwargs):
         super().__init__(parent, text="Ausgewähltes Lernziel", **kwargs)
         self.goal_getter = goal_getter            # Function to get current goal text

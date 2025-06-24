@@ -20,7 +20,7 @@ except Exception:  # pragma: no cover – standalone fallback
     CLIENT = OpenAI()  # assumes OPENAI_API_KEY is set in env
 
 
-class FlashcardEditor(tk.Toplevel):
+class card_editor_frame(tk.Toplevel):
     """A Tk window that lets the user view, edit and AI‑refine a flashcard batch."""
 
     def __init__(self, master: tk.Misc | None, json_path: str, refresh_all_goal_colors=None) -> None:
@@ -302,5 +302,5 @@ if __name__ == "__main__":
         print("Usage: python flashcard_editor.py path/to/batch.json")
         sys.exit(1)
     root = tk.Tk(); root.withdraw()
-    FlashcardEditor(root, sys.argv[1])
+    card_editor_frame(root, sys.argv[1])
     root.mainloop()

@@ -6,17 +6,17 @@ from typing import List
 from PyPDF2 import PdfReader
 
 from card_create import (
-    ChainedFlashcardGenerator,
-    OneShotFlashcardGenerator,
-    FlashcardGenerator,
+    ChainedCardCreator,
+    OneShotCardCreator,
+    card_creator,
 )
 
 # Choose the backend
-FLASHCARD_GENERATOR: FlashcardGenerator = ChainedFlashcardGenerator()
+FLASHCARD_GENERATOR: card_creator = ChainedCardCreator()
 # FLASHCARD_GENERATOR: FlashcardGenerator = OneShotFlashcardGenerator()  # switch if desired
 
 
-class FlashcardManagerFrame(tk.LabelFrame):
+class card_manager_frame(tk.LabelFrame):
     """Flash‑card pipeline that now consumes **all** PDF/TXT files in the goal folder.
 
     * No path/outdir UI anymore – the goal’s folder is implicit.

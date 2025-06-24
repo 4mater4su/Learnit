@@ -44,7 +44,7 @@ class FlashcardBatch(BaseModel):
 # --------------------------------------------------------------------------- #
 #  Generator interface
 # --------------------------------------------------------------------------- #
-class FlashcardGenerator(Protocol):
+class card_creator(Protocol):
     """
     Abstract interface – supports BOTH PDF and raw-text sources.
     """
@@ -114,7 +114,7 @@ def _schema_prompt(learning_goal: str) -> str:
 # --------------------------------------------------------------------------- #
 #  One-Shot back-end
 # --------------------------------------------------------------------------- #
-class OneShotFlashcardGenerator(FlashcardGenerator, ABC):
+class OneShotCardCreator(card_creator, ABC):
     """
     Upload once → model returns the finished flashcards (validated via JSON schema).
     """
@@ -242,7 +242,7 @@ def _flashcards_from_text_llm(text: str, learning_goal: str) -> List[Flashcard]:
 # --------------------------------------------------------------------------- #
 #  Chained back-end
 # --------------------------------------------------------------------------- #
-class ChainedFlashcardGenerator(FlashcardGenerator, ABC):
+class ChainedCardCreator(card_creator, ABC):
     """
     1. Trim the PDF (or text) to what's relevant, 2. Feed trimmed text to a second prompt.
     """
@@ -279,15 +279,15 @@ if __name__ == "__main__":
     DEMO_TXT = "/path/to/your.txt"
     GOAL = "Beispiel-Lernziel"
 
-    generator: FlashcardGenerator = ChainedFlashcardGenerator()
+    creator: card_creator = ChainedCardCreator()
 
     print("== PDF DEMO ==")
-    pdf_cards = generator.generate_flashcards(DEMO_PDF, (1, 2), GOAL)
+    pdf_cards = creator.generate_flashcards(DEMO_PDF, (1, 2), GOAL)
     for i, c in enumerate(pdf_cards, 1):
         print(f"{i}. Q: {c.question}\n   A: {c.answer}\n")
 
     print("== TXT DEMO ==")
     with open(DEMO_TXT, encoding="utf-8") as fh:
-        txt_cards = generator.generate_flashcards_from_text(fh.read(), GOAL)
+        txt_cards = creator.generate_flashcards_from_text(fh.read(), GOAL)
     for i, c in enumerate(txt_cards, 1):
         print(f"{i}. Q: {c.question}\n   A: {c.answer}\n")

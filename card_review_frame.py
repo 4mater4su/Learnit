@@ -32,7 +32,7 @@ def create_dark_button(parent, text, command, width=400, height=60, font=('SF Pr
     canvas.bind("<Key>", on_key)
     return canvas
 
-class FlashcardReviewWindow(tk.Toplevel):
+class card_review_frame(tk.Toplevel):
     def __init__(self, master, data, update_progress_callback):
         super().__init__(master)
         self.title('Flashcard Review')

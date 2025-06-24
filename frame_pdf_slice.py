@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
 
-class PDFSliceFrame(tk.LabelFrame):
+class frame_pdf_slice(tk.LabelFrame):
     def __init__(self, parent, get_current_goal, get_outdir, sanitize_dirname, slice_pdf_func, update_callback, refresh_all_goal_colors, **kwargs):
         super().__init__(parent, text="PDF zuschneiden und speichern", **kwargs)
         self.get_current_goal = get_current_goal
