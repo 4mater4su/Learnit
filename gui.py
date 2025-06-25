@@ -196,8 +196,8 @@ class Gui(tk.Tk):
                 if os.path.isfile(os.path.join(goal_dir, f)) and not f.startswith(".")
             ]
             if files:
-                return "#81720f"  # yellow
-        return "#202324"
+                return "#202324"
+        return "#81720f" 
 
     def refresh_all_goal_colors(self):
         for i, txt in enumerate(self.lernziele):
