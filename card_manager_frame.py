@@ -95,9 +95,14 @@ class card_manager_frame(tk.LabelFrame):
     # ------------------------------------------------------------------
     # Compatibility shims for other frames expecting the old API
     # ------------------------------------------------------------------
+    # def get_selected_files(self) -> List[str]:
+    #     """Old API: returns all source files now."""
+    #     return self._collect_source_files()
     def get_selected_files(self) -> List[str]:
-        """Old API: returns all source files now."""
-        return self._collect_source_files()
+        """Returns only PDF source files."""
+        # Filter the collected files to include only those with a .pdf extension
+        return [f for f in self._collect_source_files() if f.lower().endswith('.pdf')]
+
 
     def update_pdf_list(self):
         """Old checkbox‑refresh routine – no UI left, so nothing to do."""

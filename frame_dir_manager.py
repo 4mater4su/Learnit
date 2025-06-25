@@ -1,5 +1,5 @@
 """
-frame_file_manager.py
+frame_dir_manager.py
 """
 
 import tkinter as tk
@@ -50,7 +50,7 @@ class frame_dir_manager(tk.LabelFrame):
         # self.llm_btn = tk.Button(btn_row, text="LLM-Antwort", command=self.generate_llm_response, state="disabled")
         # self.llm_btn.pack(side="left", padx=4)
 
-        # self.refresh_all_goal_colors = refresh_all_goal_colors
+        self.refresh_all_goal_colors = refresh_all_goal_colors
 
     def copy_files(self):
         """Kopiert die vom Benutzer angehakten Dateien in ein Zielverzeichnis."""

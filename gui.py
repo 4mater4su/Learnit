@@ -92,7 +92,7 @@ class Gui(tk.Tk):
             goal_getter=lambda: self.current_text,
             outdir_getter=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname,
-            refresh_all_goal_colors=self.refresh_all_goal_colors,
+            refresh_all_goal_colors=lambda: self.refresh_all_goal_colors(),
             selected_files_getter=lambda: self.flashcard_manager_frame.get_selected_files(),
         )
         self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
