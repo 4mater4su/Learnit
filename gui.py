@@ -93,7 +93,7 @@ class Gui(tk.Tk):
             outdir_getter=lambda: self.current_outdir,
             sanitize_dirname=sanitize_dirname,
             refresh_all_goal_colors=lambda: self.refresh_all_goal_colors(),
-            selected_files_getter=lambda: self.flashcard_manager_frame.get_selected_files(),
+            selected_files_getter= self.flashcard_manager_frame.get_selected_files,
         )
         self.goal_file_manager.pack(fill="x", padx=10, pady=(0, 10))
 
@@ -190,14 +190,11 @@ class Gui(tk.Tk):
         if os.path.isfile(json_path):
             return "#316417"  # green
         elif os.path.isdir(goal_dir):
-            files = [
-                f
-                for f in os.listdir(goal_dir)
-                if os.path.isfile(os.path.join(goal_dir, f)) and not f.startswith(".")
-            ]
-            if files:
-                return "#202324"
-        return "#81720f" 
+            llm_path = os.path.join(goal_dir, "LLM.txt")
+            if os.path.isfile(llm_path):
+                return "#a18e14"
+        return "#202324"
+
 
     def refresh_all_goal_colors(self):
         for i, txt in enumerate(self.lernziele):

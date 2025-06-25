@@ -89,19 +89,31 @@ class card_manager_frame(tk.LabelFrame):
         return [
             os.path.join(goal_dir, f)
             for f in os.listdir(goal_dir)
+            #if f.lower().endswith(".txt") and os.path.isfile(os.path.join(goal_dir, f))
             if f.lower().endswith((".pdf", ".txt")) and os.path.isfile(os.path.join(goal_dir, f))
+
         ]
+
+    def _collect_llm_txt_file(self) -> List[str]:
+        """Return only the LLM.txt file, if it exists."""
+        goal_dir = self._goal_dir()
+        if not goal_dir:
+            return []
+        llm_path = os.path.join(goal_dir, "LLM.txt")
+        if os.path.isfile(llm_path):
+            return [llm_path]
+        return []
 
     # ------------------------------------------------------------------
     # Compatibility shims for other frames expecting the old API
     # ------------------------------------------------------------------
-    # def get_selected_files(self) -> List[str]:
-    #     """Old API: returns all source files now."""
-    #     return self._collect_source_files()
     def get_selected_files(self) -> List[str]:
-        """Returns only PDF source files."""
-        # Filter the collected files to include only those with a .pdf extension
-        return [f for f in self._collect_source_files() if f.lower().endswith('.pdf')]
+        """Old API: returns all source files now."""
+        return self._collect_source_files()
+    # def get_selected_files(self) -> List[str]:
+    #     """Returns only PDF source files."""
+    #     # Filter the collected files to include only those with a .pdf extension
+    #     return [f for f in self._collect_source_files() if f.lower().endswith('.pdf')]
 
 
     def update_pdf_list(self):
@@ -133,7 +145,8 @@ class card_manager_frame(tk.LabelFrame):
             messagebox.showerror("Fehler", "Kein Lernziel ausgewählt.")
             return
 
-        source_files = self._collect_source_files()
+        #source_files = self._collect_source_files()
+        source_files = self._collect_llm_txt_file()
         if not source_files:
             messagebox.showerror(
                 "Fehler", "Im Zielordner wurden keine PDF- oder TXT-Dateien gefunden."

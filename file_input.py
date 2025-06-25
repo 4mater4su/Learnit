@@ -51,14 +51,19 @@ def ask_pdf_question(
 
 
 if __name__ == "__main__":
+    # Du bist ein ausgezeichneter Medizinprofessor. Du schreibst die nächsten Prüfungsfragen. Generiere 5 ähnliche fragen basierend auf dem input. 
+
+
     answer = ask_pdf_question(
         pdf_path="/Users/robing/Desktop/projects/Learnit/past_papers/fragen.pdf",
         start_page=1,
         end_page=23,
         question="""SYSTEM  
-Du bist ein ausgezeichneter Medizinprofessor. Du schreibst die nächsten Prüfungsfragen. Generiere 5 ähnliche fragen basierend auf dem input. 
+Gebe den kompletten schriftlichen Inhalt unverändert zurück. Und nur den Inhalt.
 """
 
     )
 
     print(answer)
+
+    

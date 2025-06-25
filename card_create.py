@@ -163,7 +163,7 @@ class OneShotCardCreator(card_creator, ABC):
         )
 
         resp = CLIENT.responses.parse(
-            model="gpt-4o-mini",
+            model="gpt-4.1",
             input=[{"role": "user", "content": full_prompt}],
             text={"format": {"type": "json_schema", "schema": _JSON_SCHEMA_FLASHCARDS}},
         )
@@ -198,7 +198,7 @@ def _extract_relevant_text(pdf_path: str, learning_goal: str) -> str:
     )
 
     resp = CLIENT.responses.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1",
         input=[
             {
                 "role": "user",
@@ -218,7 +218,7 @@ def _flashcards_from_text_llm(text: str, learning_goal: str) -> List[Flashcard]:
     """
 
     resp = CLIENT.responses.parse(
-        model="gpt-4o-2024-08-06",
+        model="gpt-4.1",
         input=[
             {
                 "role": "system",
@@ -226,6 +226,140 @@ def _flashcards_from_text_llm(text: str, learning_goal: str) -> List[Flashcard]:
                     "Du bist ein hilfreicher Tutor. Verwandle ALLE Informationen in Fragen; "
                     "nichts darf verloren gehen. Gib ein Array von Objekten "
                     "{question, answer} zurück."
+                    """
+Few shot examples:
+1. Welche Wirkung hat eine erhöhte Sympathikusaktivität auf die Plasmakonzentration von Angiotensin II?
+   a) Senkend
+   b) Keine
+   c) Erhöhend
+
+2. Mit welchen Rezeptoren präsentieren Langerhans-Zellen Antigene hauptsächlich?
+   a) Toll-Like Rezeptor
+   b) MHC-II
+   c) CD3
+   d) CD4
+   e) CD19
+
+3. Was ist eine typische Wirkung von Cholezystokinin?
+   a) Es induziert eine Kontraktion der Gallenblase.
+   b) Es induziert ein Hungergefühl.
+   c) Es reduziert den Enzymgehalt des Pankreassaftes.
+   d) Es reduziert die glomeruläre Filtrationsrate in der Niere.
+   e) Es reduziert die Insulinsekretion im Pankreas.
+
+4. Welche der folgenden Nagelveränderungen ist typisch für die Psoriasis vulgaris?
+   a) Onychomykose
+   b) Ölfleck
+   c) Tüpfelnagelphänomen
+   d) Längsrillen
+   e) Uhrglasnägel
+
+5. Eine 75-jährige Frau stellt sich in Ihrer Praxis wegen progredienter Belastungsdyspnoe vor. Welcher Befund spricht für das Vorliegen einer Aortenklappenstenose?
+   a) Hohe Blutdruckamplitude (140/40 mmHg)
+   b) Peripheres Pulsdefizit
+   c) Vorhofflimmern im EKG
+   d) Spindelförmiges Systolikum mit Fortleitung in die Karotiden
+
+6. Was ist ein Kennzeichen einer hyperphagen Essstörung?
+   a) Essen von einer großen Mahlzeit am Tag
+   b) Essen über den kalorischen Bedarf hinaus
+   c) Essen im Rahmen von Essattacken
+   d) Regelmäßiges Erbrechen nach dem Essen
+
+7. Worin unterscheiden sich die de-novo-Synthese und der Wiederverwertungsstoffwechsel von Purinbasen?
+   a) In ihrer zellulären Lokalisation
+   b) In ihren Endprodukten
+   c) In ihren Ausgangssubstanzen
+
+8. Wie wird Staphylococcus epidermidis laut morphologisch-physiologischer Bakteriensystematik bezeichnet?
+   a) Gram-positiv, aerob
+   b) Gram-negativ, aerob
+   c) Gram-negativ, anaerob
+   d) Gram-positiv, sporenbildend
+   e) Gram-negativ, nicht-sporenbildend
+
+9. Wie lang darf der QRS-Komplex bei einem unauffälligen EKG maximal dauern?
+   a) 10 ms
+   b) 60 ms
+   c) 120 ms
+   d) 180 ms
+   e) Es gibt keinen Grenzwert für die Dauer des QRS-Komplexes.
+
+10. Welche hormonellen Veränderungen sind nach einem deutlichen Gewichtsverlust am wahrscheinlichsten?
+    a) Abfall von Leptin
+    b) Abfall von Ghrelin
+    c) Abfall von GLP-1
+    d) Anstieg von Insulin
+    e) Anstieg von TSH
+
+11. Welche Hautveränderung ist eine Primäreffloreszenz?
+    a) Squama
+    b) Vesicula
+    c) Cicatrix
+    d) Ulkus
+    e) Nodus
+
+12. Von welchem Typ sind die Rezeptoren des Parasympathikus am Erfolgsorgan?
+    a) Muskarinerge Acetylcholinrezeptoren
+    b) Nikotinerge Acetylcholinrezeptoren
+    c) Adrenerge alpha-Rezeptoren
+    d) Adrenerge beta-Rezeptoren
+    e) Glutaminrezeptoren vom Typ NMDA
+
+13. Für die Beteiligung welcher Wurzel spricht der einseitige Ausfall des Patellar-Sehnen-Reflexes bei einer Lumboischialgie bei ansonsten seitengleichen lebhaften Muskeleigenreflexen?
+    a) L4
+    b) L5
+    c) S1
+    d) S2
+
+14. Was bewirkt die laterale Hemmung auf der Ebene des Rückenmarks?
+    a) Eine Unterdrückung irrelevanter taktiler Reize (Habituation)
+    b) Eine Unterdrückung nozizeptiver Reizweiterleitung durch mechanische Reize (gate theory)
+    c) Eine Blockade der Sensibilisierung nozizeptiver C-Fasern
+    d) Eine Abnahme der Zwei-Punkt-Unterschiedsschwelle für taktile Reize
+    e) Eine Abnahme der Empfindlichkeit der mechanosensitiven A-β-Fasern
+
+15. Wofür werden definitionsgemäß die Abbauprodukte einer rein glucoplastischen Aminosäure im Körper genutzt?
+    a) Für die Bildung von Ketonkörpern
+    b) Für die anaplerotische Supplementierung des Citratzyklus
+    c) Für die Proteinsynthese
+    d) Für die Bildung von Cholesterol
+
+16. Wie kann der Glykogenabbau im arbeitenden Muskel verstärkt werden?
+    a) Aktivierung der Phosphorylasekinase durch Bindung von Mg²⁺
+    b) Aktivierung der Phosphorylasekinase durch Bindung von Ca²⁺
+    c) Aktivierung der Phosphorylase b durch Bindung von cAMP
+    d) Aktivierung der Phosphorylase b durch Bindung von ADP
+    e) Aktivierung der Phosphorylase b durch Bindung von Ca²⁺
+
+17. Welche Struktur hat die Funktion der Bildung einer wasserdichten Diffusionsbarriere?
+    a) Melanozyten
+    b) Meissner-Körperchen
+    c) Stratum corneum
+    d) Stratum basale
+    e) Stratum spinosum
+    f) Plexus superficialis
+
+18. Welches der folgenden Medikamente wird bei der Behandlung von Erkrankten mit dilatativer Kardiomyopathie grundsätzlich empfohlen?
+    a) Digitoxin
+    b) Digoxin
+    c) ACE-Hemmer
+    d) Phenprocoumon
+
+19. In welchem Hautbereich manifestieren sich Infektionen mit dem Herpes-Simplex-Virus vom Typ 2 (HSV-2) überwiegend?
+    a) Hinter den Ohren
+    b) An der Genitalschleimhaut
+    c) Am Rumpf
+    d) Im Lippenbereich
+    e) An den Extremitäten
+
+20. Bei welcher Erkrankung kann das sogenannte Cullen-Zeichen auftreten?
+    a) Ulcus duodeni
+    b) Leberzirrhose
+    c) Leberzellkarzinom
+    d) Pankreatitis
+    e) Appendizitis
+"""
                 ),
             },
             {
