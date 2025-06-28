@@ -15,15 +15,17 @@ example_json = """
 }
 """
 example_relations = """
-M_deltoideus → hat_Anteil → Pars_clavicularis
-M_deltoideus → hat_Anteil → Pars_acromialis
-M_deltoideus → hat_Anteil → Pars_spinalis
-M_deltoideus → Ansatz → Tuberositas_deltoidea_humeri
-M_deltoideus → Innervation → N_axillaris
-M_deltoideus → Innervation_Segmente → C5-C6
+relations = [
+    ("M_deltoideus", "hat_Anteil", "Pars_clavicularis"),
+    ("M_deltoideus", "hat_Anteil", "Pars_acromialis"),
+    ("M_deltoideus", "hat_Anteil", "Pars_spinalis"),
+    ("M_deltoideus", "Ansatz", "Tuberositas_deltoidea_humeri"),
+    ("M_deltoideus", "Innervation", "N_axillaris"),
+    ("M_deltoideus", "Innervation_Segmente", "C5-C6")
+]
 """
 
-# Hier setzt du dein JSON ein (zum Beispiel als Output von Schritt 1):
+# JSON you want to convert:
 input_json = """
 {
   "M_quadriceps_femoris": {
@@ -43,7 +45,8 @@ input_json = """
 """
 
 prompt = f"""\
-Wandle folgende hierarchische JSON-Struktur in eine Liste von Relationen (Tripel) um, in der jede Beziehung als 'Subjekt → Relation → Objekt' dargestellt wird.
+Wandle folgende hierarchische JSON-Struktur in **eine Python-Liste von Tripeln** \
+(jedes Tripel ist ein Tupel der Form (Subjekt, Relation, Objekt)) um. Gebe ausschließlich die Liste von Tripeln zurück.
 
 Beispiel:
 Input:
@@ -58,9 +61,7 @@ Output:
 
 completion = client.chat.completions.create(
     model="gpt-4.1",
-    messages=[
-        {"role": "user", "content": prompt}
-    ]
+    messages=[{"role": "user", "content": prompt}]
 )
 
 print(completion.choices[0].message.content)
