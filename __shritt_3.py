@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Dict
 from openai import OpenAI
 import json
+import os
 
 client = OpenAI()
 
@@ -133,10 +134,102 @@ def validate_relations(
     return False
 
 
+
+# ——————————————————————————————
+# 4) Spaced-Repetition–Stats persistieren
+# ——————————————————————————————
+STATS_FILE = "relation_stats.json"
+
+class RelationStat(BaseModel):
+    subject: str
+    predicate: str
+    object: str
+    repetition_count: int = 0
+    average_difficulty: float = 0.0
+
+def load_stats(relations: List[Tuple[str, str, str]]) -> Dict[Tuple[str, str, str], RelationStat]:
+    if os.path.exists(STATS_FILE):
+        with open(STATS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        stats = {
+            (item["subject"], item["predicate"], item["object"]): RelationStat(**item)
+            for item in data
+        }
+    else:
+        stats = {
+            r: RelationStat(subject=r[0], predicate=r[1], object=r[2])
+            for r in relations
+        }
+    return stats
+
+def save_stats(stats: Dict[Tuple[str, str, str], RelationStat]) -> None:
+    data = [stat.model_dump() for stat in stats.values()]
+    with open(STATS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def rate_question(
+    question: str,
+    qa_relations: List[QuestionRelations],
+    stats: Dict[Tuple[str, str, str], RelationStat],
+    rating: float
+) -> None:
+    # Frage-Eintrag finden
+    entry = next(e for e in qa_relations if e.question == question)
+    for rel in entry.relations:
+        key = (rel.subject, rel.predicate, rel.object)
+        stat = stats[key]
+        old_count = stat.repetition_count
+        stat.repetition_count += 1
+        stat.average_difficulty = (
+            stat.average_difficulty * old_count + rating
+        ) / stat.repetition_count
+
+
+# ——————————————————————————————
+# 5) CLI–Routine zum Raten
+# ——————————————————————————————
+def cli_rating_loop(qa_relations: List[QuestionRelations]):
+    stats = load_stats(relations)
+    while True:
+        print("\nFragen:")
+        for idx, entry in enumerate(qa_relations, start=1):
+            print(f"{idx}. {entry.question}")
+        choice = input("Wähle die Frage-Nummer zum Bewerten (oder 'q' zum Beenden): ").strip()
+        if choice.lower() == "q":
+            break
+        if not choice.isdigit() or not (1 <= int(choice) <= len(qa_relations)):
+            print("Ungültige Auswahl, bitte erneut versuchen.")
+            continue
+
+        idx = int(choice) - 1
+        question = qa_relations[idx].question
+        rating_str = input("Gib eine Schwierigkeit 1–5 ein: ").strip()
+        try:
+            rating = float(rating_str)
+            if not (1.0 <= rating <= 5.0):
+                raise ValueError
+        except ValueError:
+            print("Ungültige Bewertung, bitte eine Zahl zwischen 1 und 5 eingeben.")
+            continue
+
+        rate_question(question, qa_relations, stats, rating)
+        save_stats(stats)
+        print(f"Bewertung gespeichert für: «{question}»")
+
+        # Optionally, show updated stats for this question's relations
+        print("Aktuelle Statistiken der betroffenen Relationen:")
+        for rel in qa_relations[idx].relations:
+            key = (rel.subject, rel.predicate, rel.object)
+            stat = stats[key]
+            print(f" - {key}: count={stat.repetition_count}, avg_diff={stat.average_difficulty:.2f}")
+
+    print("Rating beendet, alle Daten gespeichert.")
+
+
 # ——————————————————————————————
 # Main
 # ——————————————————————————————
-
 if __name__ == "__main__":
     # 1) Q&A erzeugen und ausgeben
     qa_pairs = generate_qa()
@@ -157,3 +250,6 @@ if __name__ == "__main__":
     print("=== Validierungsergebnis ===")
     result = validate_relations(relations, qa_relations)
     print("Validation erfolgreich:", result)
+
+    # 4) CLI für Rating
+    cli_rating_loop(qa_relations)
