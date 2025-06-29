@@ -10,6 +10,8 @@ client = OpenAI()
 # 1) Ausgangsdaten und Q&A-Generierung
 # ——————————————————————————————
 
+lernziel = "Die einzelnen Muskelköpfe des M. quadriceps femoris, dessen Ansatz, sowie die zugehörige nervale Versorgung und deren Segmentzuordnung benennen und erläutern"
+
 relations: List[Tuple[str, str, str]] = [
     ("M_quadriceps_femoris", "hat_Muskelkopf", "M_rectus_femoris"),
     ("M_quadriceps_femoris", "hat_Muskelkopf", "M_vastus_medialis"),
