@@ -3,29 +3,29 @@
     "subject": "M_quadriceps_femoris",
     "predicate": "hat_Muskelkopf",
     "object": "M_rectus_femoris",
-    "repetition_count": 3,
-    "average_difficulty": 1.3333333333333333
+    "repetition_count": 1,
+    "average_difficulty": 1.0
   },
   {
     "subject": "M_quadriceps_femoris",
     "predicate": "hat_Muskelkopf",
     "object": "M_vastus_medialis",
-    "repetition_count": 3,
-    "average_difficulty": 1.3333333333333333
+    "repetition_count": 1,
+    "average_difficulty": 1.0
   },
   {
     "subject": "M_quadriceps_femoris",
     "predicate": "hat_Muskelkopf",
     "object": "M_vastus_intermedius",
-    "repetition_count": 3,
-    "average_difficulty": 1.3333333333333333
+    "repetition_count": 1,
+    "average_difficulty": 1.0
   },
   {
     "subject": "M_quadriceps_femoris",
     "predicate": "hat_Muskelkopf",
     "object": "M_vastus_lateralis",
-    "repetition_count": 3,
-    "average_difficulty": 1.3333333333333333
+    "repetition_count": 1,
+    "average_difficulty": 1.0
   },
   {
     "subject": "M_quadriceps_femoris",
@@ -45,7 +45,7 @@
     "subject": "M_quadriceps_femoris",
     "predicate": "Innervation_Segmente",
     "object": "L2-L4",
-    "repetition_count": 2,
-    "average_difficulty": 3.0
+    "repetition_count": 0,
+    "average_difficulty": 0.0
   }
 ]

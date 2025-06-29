@@ -4,11 +4,19 @@ __rev_rel_rate.py
 
 """
 
+import re
 from pydantic import BaseModel
 from typing import List, Tuple, Set, Dict
 from openai import OpenAI
 import json
 import os
+
+STATS_DIR = "relation_stats"
+
+def sanitize_name(name: str) -> str:
+    """Keep letters, numbers, dash/underscore. Replace spaces and other chars with underscores."""
+    sanitized = re.sub(r'[^A-Za-z0-9_\-]', '_', name.replace(' ', '_'))
+    return sanitized[:100]
 
 # ------------------------------------------
 # OpenAI-Client initialisieren
@@ -55,7 +63,32 @@ class LearningObjective(BaseModel):
     qa_relations: List[QuestionRelations] = []
     stats: Dict[Tuple[str, str, str], RelationStat] = {}
 
-    STATS_FILE: str = "relation_stats.json"
+    @property
+    def stats_file(self):
+        sanitized = sanitize_name(self.title)
+        return os.path.join(STATS_DIR, f"relation_stats_{sanitized}.json")
+
+    # --- Stats laden & speichern ---
+    def load_stats(self):
+        os.makedirs(STATS_DIR, exist_ok=True)
+        if os.path.exists(self.stats_file):
+            with open(self.stats_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.stats = {
+                (item["subject"], item["predicate"], item["object"]): RelationStat(**item)
+                for item in data
+            }
+        else:
+            self.stats = {
+                r: RelationStat(subject=r[0], predicate=r[1], object=r[2])
+                for r in self.relations
+            }
+
+    def save_stats(self):
+        os.makedirs(STATS_DIR, exist_ok=True)
+        data = [stat.model_dump() for stat in self.stats.values()]
+        with open(self.stats_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
     # --- Q&A generieren ---
     def generate_qa(self, client):
@@ -140,26 +173,6 @@ class LearningObjective(BaseModel):
                 print(f"   - ({subj}, {pred}, {obj})")
 
         return False
-
-    # --- Stats laden & speichern ---
-    def load_stats(self):
-        if os.path.exists(self.STATS_FILE):
-            with open(self.STATS_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            self.stats = {
-                (item["subject"], item["predicate"], item["object"]): RelationStat(**item)
-                for item in data
-            }
-        else:
-            self.stats = {
-                r: RelationStat(subject=r[0], predicate=r[1], object=r[2])
-                for r in self.relations
-            }
-
-    def save_stats(self):
-        data = [stat.model_dump() for stat in self.stats.values()]
-        with open(self.STATS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     # --- Frage bewerten und Stats aktualisieren ---
     def rate_question(self, question: str, rating: float):
