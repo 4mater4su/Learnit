@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-network_paths.py
+____network_paths.py
 ================
 Explore a biomedical knowledge graph with symmetrical edges while
 always printing predicates in their semantic direction.
