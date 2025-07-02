@@ -148,10 +148,10 @@ def explore_graph(
 # Tiny demo when run directly (optional)
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
-    sample_text = "Der M. biceps brachii hat zwei Köpfe: Caput longum und Caput breve."
-    print("Ingesting sample text …")
-    n = ingest_texts([sample_text])
-    print(f"Added {n} triples.\n")
+    # sample_text = "Der M. biceps brachii hat zwei Köpfe: Caput longum und Caput breve."
+    # print("Ingesting sample text …")
+    # n = ingest_texts([sample_text])
+    # print(f"Added {n} triples.\n")
 
     info = explore_graph()
     print(f"Focus concept: {info['focus']}\n")
